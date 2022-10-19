@@ -23,7 +23,7 @@ class Manipulator:
         self._rotate = [0, 0, 0, 0]
         if params is None:
             params = [
-                tuple([(-180, 180)] + [(-120, 120) for _ in range(len(self._rotate) - 1)]),  # angle restrictions
+                tuple([(-180, 180)] + [(-180, 180) for _ in range(len(self._rotate) - 1)]),  # angle restrictions
             ]
         else:
             assert len(params) == 1
@@ -85,7 +85,7 @@ class Manipulator:
         self._rotate[vert_num] += angle
         min_r, max_r = self.angle_limits[vert_num]
         self._rotate[vert_num] = min(max_r, max(min_r, self._rotate[vert_num]))
-        if abs(self._rotate[vert_num] >= 180):
+        if abs(self._rotate[vert_num]) >= 180:
             self._rotate[vert_num] = -self._rotate[vert_num]
         print(self._rotate[vert_num])
 
@@ -168,7 +168,12 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(WINDOW_SIZE, FLAGS)
 
     surf_size = (200, 200)
-    m = Manipulator((0, 0), (0, 20), (0, 40), (0, 60))
+    m = Manipulator((0, 0), (0, 20), (0, 40), (0, 60),params=[[
+        (-180, 180),
+        (-60, 80),
+        (-120, 90),
+        (-170, 50)
+    ]])
     m.translate((100, 100))
 
     clock = pygame.time.Clock()
@@ -190,9 +195,9 @@ if __name__ == '__main__':
         s = pygame.Surface(surf_size)
         s.fill((0xff, 0xff, 0xff))
         m.rotate(0, 10)
-        m.rotate(1, -2)
+        m.rotate(1, -1)
         m.rotate(2, 3)
-        m.rotate(3, -5)
+        m.rotate(3, 5)
         i += 1
         i = i % 200
         m.draw(s)
