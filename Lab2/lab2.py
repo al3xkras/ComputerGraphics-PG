@@ -12,7 +12,7 @@ class Manipulator:
     hand_width = 20
     hand_ratio = 1.6
 
-    def __init__(self, M, w3, w2, w1, params=None):
+    def __init__(self, M, w3, w2, w1, lock=False, params=None):
         self.hand = None
         self.arm2 = None
         self.arm1 = None
@@ -30,12 +30,13 @@ class Manipulator:
             assert len(params[0]) == len(self._rotate)
 
         self.angle_limits = params[0]
+        if lock:
+            self.angle_limits=tuple([self.angle_limits[0]] + [(0, 0) for _ in range(len(self._rotate) - 1)])
 
         try:
             self.loadAssets()
         except:
             pass
-
     def loadAssets(self):
         self.arm1 = pygame.image.load(Manipulator.graphics_path + "arm_1.png")
         self.arm2 = pygame.image.load(Manipulator.graphics_path + "arm_1.png")
@@ -168,7 +169,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(WINDOW_SIZE, FLAGS)
 
     surf_size = (200, 200)
-    m = Manipulator((0, 0), (0, 20), (0, 40), (0, 60),params=[[
+    m = Manipulator((0, 0), (10, 20), (0, 40), (0, 60),params=[[
         (-180, 180),
         (-60, 80),
         (-120, 90),
