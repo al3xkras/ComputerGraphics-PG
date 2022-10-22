@@ -2,6 +2,8 @@ import math
 from math import sin, cos
 
 import pygame.gfxdraw
+import tkinter as tk
+from lab2gui import ManipulatorGUI
 
 
 class Manipulator:
@@ -31,12 +33,13 @@ class Manipulator:
 
         self.angle_limits = params[0]
         if lock:
-            self.angle_limits=tuple([self.angle_limits[0]] + [(0, 0) for _ in range(len(self._rotate) - 1)])
+            self.angle_limits = tuple([self.angle_limits[0]] + [(0, 0) for _ in range(len(self._rotate) - 1)])
 
         try:
             self.loadAssets()
         except:
             pass
+
     def loadAssets(self):
         self.arm1 = pygame.image.load(Manipulator.graphics_path + "arm_1.png")
         self.arm2 = pygame.image.load(Manipulator.graphics_path + "arm_1.png")
@@ -88,7 +91,6 @@ class Manipulator:
         self._rotate[vert_num] = min(max_r, max(min_r, self._rotate[vert_num]))
         if abs(self._rotate[vert_num]) >= 180:
             self._rotate[vert_num] = -self._rotate[vert_num]
-        print(self._rotate[vert_num])
 
     @staticmethod
     def rotate_surface(surface, angle, pivot, offset):
@@ -99,11 +101,10 @@ class Manipulator:
             pivot (tuple, list, pygame.math.Vector2): The pivot point.
             offset (pygame.math.Vector2): This vector is added to the pivot.
         """
-        rotated_image = pygame.transform.rotozoom(surface, -angle, 1)  # Rotate the image.
-        rotated_offset = offset.rotate(angle)  # Rotate the offset vector.
-        # Add the offset vector to the center/pivot point to shift the rect.
+        rotated_image = pygame.transform.rotozoom(surface, -angle, 1)
+        rotated_offset = offset.rotate(angle)
         rect = rotated_image.get_rect(center=pivot + rotated_offset)
-        return rotated_image, rect  # Return the rotated image and shifted rect.
+        return rotated_image, rect
 
     def scale(self, vert_num, coeff):
         self._scale[vert_num] = coeff
@@ -168,40 +169,37 @@ if __name__ == '__main__':
 
     screen = pygame.display.set_mode(WINDOW_SIZE, FLAGS)
 
-    surf_size = (200, 200)
-    m = Manipulator((0, 0), (10, 20), (0, 40), (0, 60),params=[[
-        (-180, 180),
-        (-60, 80),
-        (-120, 90),
-        (-170, 50)
-    ]])
-    m.translate((100, 100))
+    surf_size = (WINDOW_SIZE[0] / 2, WINDOW_SIZE[1] / 2)
+    manipulator = Manipulator((0, 0), (0, 20), (0, 40), (0, 60))
+    manipulator.translate((surf_size[0] / 2, surf_size[1] / 2))
+
+    window = tk.Tk()
+    window.geometry('500x300')
+    embed = tk.Frame(window, width=500, height=300)
+    embed.pack()
+    os.environ['SDL_WINDOWID'] = str(embed.winfo_id())
+    os.environ["SDL_VIDEODRIVER"] = "dummy"
+
+    gui = ManipulatorGUI(window, manipulator, {
+        "scale_max": 5
+    })
 
     clock = pygame.time.Clock()
-    i = 1
     while True:
         clock.tick(30)
-        # get events
         for event in pygame.event.get():
-            # if QUIT
             if event.type == pygame.QUIT:
-                # clean up
                 pygame.quit()
-                # bye bye
                 exit()
 
         screen.fill((0xff, 0xff, 0xff))
 
-        # Usage example
         s = pygame.Surface(surf_size)
         s.fill((0xff, 0xff, 0xff))
-        m.rotate(0, 10)
-        m.rotate(1, -1)
-        m.rotate(2, 3)
-        m.rotate(3, 5)
-        i += 1
-        i = i % 200
-        m.draw(s)
+
+        gui.update()
+        manipulator.draw(s)
         screen.blit(pygame.transform.scale(s, WINDOW_SIZE), (0, 0))
 
         pygame.display.flip()
+        window.update()
