@@ -7,17 +7,17 @@ from lab2gui import ManipulatorGUI
 
 
 class Manipulator:
-    _hand_prefix = "/hand.png"
-    _wrist_prefix = "/wrist.png"
+    _hand = "/hand.png"
+    _arm = "/arm.png"
     graphics_path = "./graphics/"
     arm_width = 5
     hand_width = 20
-    hand_ratio = 1.6
+    hand_ratio = 1.4
 
     def __init__(self, M, w3, w2, w1, lock=False, params=None):
+        self.arm = None
         self.hand = None
-        self.arm2 = None
-        self.arm1 = None
+        self.lock = lock
         self.vertices = (M, w3, w2, w1)
         self.S = tuple(
             Manipulator.distance(self.vertices[i], self.vertices[i + 1]) for i in range(len(self.vertices) - 1))
@@ -32,8 +32,6 @@ class Manipulator:
             assert len(params[0]) == len(self._rotate)
 
         self.angle_limits = params[0]
-        if lock:
-            self.angle_limits = tuple([self.angle_limits[0]] + [(0, 0) for _ in range(len(self._rotate) - 1)])
 
         try:
             self.loadAssets()
@@ -41,9 +39,8 @@ class Manipulator:
             pass
 
     def loadAssets(self):
-        self.arm1 = pygame.image.load(Manipulator.graphics_path + "arm_1.png")
-        self.arm2 = pygame.image.load(Manipulator.graphics_path + "arm_1.png")
-        self.hand = pygame.image.load(Manipulator.graphics_path + "hand.png")
+        self.hand = pygame.image.load(Manipulator.graphics_path + Manipulator._hand)
+        self.arm = pygame.image.load(Manipulator.graphics_path + Manipulator._arm)
 
     @staticmethod
     def distance(p1, p2):
@@ -69,9 +66,8 @@ class Manipulator:
 
     def draw(self, surface: pygame.Surface):
         vertices = self._eval_vertices()
-        pygame.draw.circle(surface, "black", vertices[0], Manipulator.arm_width * 2, width=1)
         for _i in range(1, len(vertices)):
-            Manipulator._draw_arm(surface, vertices[_i - 1], vertices[_i], Manipulator.arm_width, self.arm1)
+            Manipulator._draw_arm(surface, vertices[_i - 1], vertices[_i], Manipulator.arm_width, self.hand)
 
         v1 = vertices[3]
         sc = [vertices[2][0] - v1[0], vertices[2][1] - v1[1]]
@@ -80,12 +76,14 @@ class Manipulator:
         v2 = [v1[i] + sc[i] for i in range(len(v1))]
         v2 = Manipulator.rotate_around_point(v2, self._rotate[3] / 180 * math.pi, v1)
 
-        self._draw_hand(surface, v1, v2, Manipulator.hand_width, self.hand)
+        self._draw_hand(surface, v1, v2, Manipulator.hand_width, self.arm)
 
     def _eval_vertices(self):
         return self._eval_scaled_points(self._eval_rotated_points())
 
     def rotate(self, vert_num, angle):
+        if self.lock and vert_num > 0:
+            return
         self._rotate[vert_num] += angle
         min_r, max_r = self.angle_limits[vert_num]
         self._rotate[vert_num] = min(max_r, max(min_r, self._rotate[vert_num]))
@@ -135,7 +133,7 @@ class Manipulator:
         else:
             angle = Manipulator.angle(V1, V2)
             dist = Manipulator.distance(V1, V2)
-            arm = pygame.transform.scale(arm, (arm_width, dist))
+            arm = pygame.transform.scale(arm, (arm_width, dist * 1.1))
             surface.blit(*Manipulator.rotate_surface(arm, angle * 180 / math.pi, V1, pygame.math.Vector2(0, -dist / 2)))
 
     def _draw_hand(self, surface: pygame.Surface, V, V1, hand_width, hand=None):
@@ -157,8 +155,8 @@ if __name__ == '__main__':
 
     pygame.init()
 
-    WINDOW_SIZE = (600, 600)
-    WINDOW_POSITION = (100, 100)
+    WINDOW_SIZE = (700, 700)
+    WINDOW_POSITION = (500, 30)
 
     FONT_SIZE = 24
     FONT_BOLD = False
@@ -169,12 +167,13 @@ if __name__ == '__main__':
 
     screen = pygame.display.set_mode(WINDOW_SIZE, FLAGS)
 
-    surf_size = (WINDOW_SIZE[0] / 2, WINDOW_SIZE[1] / 2)
-    manipulator = Manipulator((0, 0), (0, 20), (0, 40), (0, 60))
+    scale_coeff = 3
+    surf_size = (WINDOW_SIZE[0] / scale_coeff, WINDOW_SIZE[1] / scale_coeff)
+    manipulator = Manipulator((0, 0), (0, 20), (0, 40), (0, 70))
     manipulator.translate((surf_size[0] / 2, surf_size[1] / 2))
 
     window = tk.Tk()
-    window.geometry('500x300')
+    window.geometry('450x300+10+100')
     embed = tk.Frame(window, width=500, height=300)
     embed.pack()
     os.environ['SDL_WINDOWID'] = str(embed.winfo_id())

@@ -25,6 +25,7 @@ class ManipulatorGUI:
         self.lim3max = IntVar()
         self.lim4min = IntVar()
         self.lim4max = IntVar()
+        self.lock = BooleanVar()
         self._initVars()
         self._drawGUI()
 
@@ -57,6 +58,8 @@ class ManipulatorGUI:
         Entry(self.window, bg="#FFFFFF", fg="#000000", textvariable=self.lim4min, width=10).place(x=100, y=220)
         Entry(self.window, bg="#FFFFFF", fg="#000000", textvariable=self.lim4max, width=10).place(x=170, y=220)
 
+        Checkbutton(self.window, variable=self.lock, text="lock").place(x=20, y=240)
+
     def _initVars(self):
         self.rotate0.set(0)
         self.rotate1.set(0)
@@ -70,6 +73,7 @@ class ManipulatorGUI:
         self.lim3max.set(180)
         self.lim4min.set(-180)
         self.lim4max.set(180)
+        self.lock.set(False)
 
     def update(self):
         manipulator = self.manipulator
@@ -122,4 +126,9 @@ class ManipulatorGUI:
 
             manipulator.angle_limits = angle_lims
         except TclError or AssertionError:
+            pass
+
+        try:
+            manipulator.lock = self.lock.get()
+        except TclError:
             pass
