@@ -67,10 +67,10 @@ class Lab3:
                     self.stop()
 
             screen = self.screen
-            screen.fill((0xff, 0xff, 0xff))
+            screen.fill((0x00, 0x00, 0x00))
 
             self.background.draw(screen)
-            self.spacecraft.draw(screen)
+            #self.spacecraft.draw(screen)
 
             pygame.display.flip()
 
