@@ -27,14 +27,13 @@ class Stars:
         assert count > 0
         return [(randint(0, surface.get_width()), randint(0, surface.get_height())) for _ in range(count)]
 
-    def __init__(self, distance, speed, star_size, reverse=False):
+    def __init__(self, distance, speed, star_size):
         assert distance >= 0
         self.distance = distance
         self.speed = speed
         self.star_size = star_size
         self.star = None
         self.sprite_index = Stars.index(self.speed)
-        self.reverse = reverse
         self._load_sprites()
 
     def _load_sprites(self):
@@ -42,7 +41,7 @@ class Stars:
         self.star = pygame.image.load(Stars.graphics_path + Stars.star_sprite % self.sprite_index).convert_alpha()
         self.star = pygame.transform.scale(self.star, (
             int(self.star_size * self.star.get_width() / self.star.get_height()), self.star_size))
-        if self.reverse:
+        if self.speed < 0:
             self.star = pygame.transform.flip(self.star, True, False)
 
     def draw(self, layer: pygame.Surface, coordinates, blink=True):
@@ -59,12 +58,11 @@ class FalseDepthBackground:
     depth_delta = 10
     depth_factor = 0.8  # depth_factor size & speed for depth = depth_delta; depth_factor^2 for depth = 2*depth_delta, ...
 
-    def __init__(self, layer_count=2, initial_speed=40, background_depth=100):
+    def __init__(self, layer_count=2, initial_speed=40, background_depth=100, star_size=7):
         assert layer_count > 0 and type(layer_count) == int
         assert initial_speed >= 0
         assert background_depth >= layer_count * 10 and type(background_depth) == int
 
-        self.is_reverse = False
         self.layer_count = layer_count
         self.movement_speed = initial_speed
         self.background_depth = background_depth
@@ -73,7 +71,7 @@ class FalseDepthBackground:
         self.layers_speed = []
         self.layers_translate = [0] * layer_count
         self.layer_star_coords = []
-        self.star_size = 15
+        self.star_size = star_size
 
     def _eval_layer_params(self):
         cur_layer_distance = self.background_depth
@@ -88,6 +86,19 @@ class FalseDepthBackground:
             cur_layer_speed_percent /= FalseDepthBackground.depth_factor
             self.layers_speed.append(cur_layer_speed)
 
+    def _update_layer_params(self):
+        cur_layer_distance = self.background_depth
+        cur_layer_speed_percent = pow(FalseDepthBackground.depth_factor,
+                                      self.background_depth // FalseDepthBackground.depth_delta)
+        d_distance = self.background_depth // self.layer_count
+
+        for i in range(self.layer_count):
+            self.layers_distance[i] = cur_layer_distance
+            cur_layer_distance = max(0, cur_layer_distance - d_distance)
+            cur_layer_speed = self.movement_speed * cur_layer_speed_percent
+            cur_layer_speed_percent /= FalseDepthBackground.depth_factor
+            self.layers_speed[i] = cur_layer_speed
+
     def _init_layers(self, screen: pygame.Surface):
         colors = ["red", "green"]
         for i in range(self.layer_count):
@@ -100,7 +111,7 @@ class FalseDepthBackground:
         distance = self.layers_distance[layer_index]
         speed = self.layers_speed[layer_index]
         coordinates = self.layer_star_coords[layer_index]
-        Stars(distance, speed, self.star_size, reverse=self.is_reverse).draw(layer, coordinates, True)
+        Stars(distance, speed, self.star_size).draw(layer, coordinates, True)
 
         screen.blit(layer, (self.layers_translate[layer_index], 0))
         screen.blit(layer, (self.layers_translate[layer_index] - layer.get_width(), 0))
@@ -117,12 +128,13 @@ class FalseDepthBackground:
 
     def speed_up(self, delta):
         self.movement_speed += delta
+        self._update_layer_params()
 
     def slow_down(self, delta):
-        self.movement_speed = max(0, self.movement_speed - delta)
+        self.movement_speed -= delta
+        self._update_layer_params()
 
     def reverse(self):
-        self.is_reverse = not self.is_reverse
         self.movement_speed = -self.movement_speed
         self.layers_translate = [-x for x in self.layers_translate]
 

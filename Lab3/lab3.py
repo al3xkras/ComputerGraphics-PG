@@ -37,10 +37,12 @@ class Lab3:
         self.screen = self._pygame_screen_setup()
 
     def speed_up(self):
-        print("a pressed")
+        self.background.speed_up(100)
+        print("speed up")
 
     def slow_down(self):
-        print("b pressed")
+        self.background.slow_down(100)
+        print("slow down")
 
     def _setup_hotkeys(self):
         with keyboard.GlobalHotKeys({
@@ -81,7 +83,8 @@ class Lab3:
 if __name__ == '__main__':
     from pygame.locals import *
 
-    lab3 = Lab3(bg_layer_count=15, initial_speed=2000,bg_depth=300)
+    lab3 = Lab3(bg_layer_count=15, initial_speed=0,bg_depth=200)
     lab3.setup()
-    #lab3.background.reverse()
+    lab3.background.reverse()
+    lab3.background.star_size=7
     lab3.mainloop()
