@@ -81,7 +81,7 @@ class Lab3:
 if __name__ == '__main__':
     from pygame.locals import *
 
-    lab3 = Lab3(bg_layer_count=15, initial_speed=300,bg_depth=300)
+    lab3 = Lab3(bg_layer_count=15, initial_speed=2000,bg_depth=300)
     lab3.setup()
-    lab3.background.reverse()
+    #lab3.background.reverse()
     lab3.mainloop()
