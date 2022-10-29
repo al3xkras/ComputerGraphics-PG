@@ -23,7 +23,7 @@ class Lab3:
         self.warp = 0
 
     def setup(self, setup_hotkeys=True):
-        self.background = FalseDepthBackground()
+        self.background = FalseDepthBackground(layer_count=3)
         self.spacecraft = Spacecraft()
 
         if setup_hotkeys:

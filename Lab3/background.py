@@ -6,6 +6,7 @@ class Stars:
     graphics_path = "./graphics/"
     star_sprite = "star_%d.png"
     max_sprite_index = 5
+    star_size = 15  # px
 
     @staticmethod
     def index(speed):
@@ -24,10 +25,11 @@ class Stars:
         assert count > 0
         return [(randint(0, surface.get_width()), randint(0, surface.get_height())) for _ in range(count)]
 
-    def __init__(self, distance, speed):
+    def __init__(self, distance, speed, star_size):
         assert distance >= 0 and speed >= 0
         self.distance = distance
         self.speed = speed
+        self.star_size=star_size
         self.star = None
         self.sprite_index = Stars.index(self.speed)
         self._load_sprites()
@@ -35,13 +37,16 @@ class Stars:
     def _load_sprites(self):
         assert self.sprite_index is not None
         self.star = pygame.image.load(Stars.graphics_path + Stars.star_sprite % self.sprite_index).convert_alpha()
+        self.star = pygame.transform.scale(self.star, (
+            int(self.star_size * self.star.get_width() / self.star.get_height()), self.star_size))
 
     def draw(self, layer: pygame.Surface, coordinates, blink=True):
         for coords in coordinates:
             s = self.star.copy()
             if blink:
-                alpha = 0.8 + 0.2 / randint(1, 3)
-                s.set_alpha(alpha*128)
+                r = randint(30, 100) / 100
+                alpha = r + (1 - r) * (randint(5, 10) / 10)
+                s.set_alpha(alpha * 128)
             layer.blit(s, coords)
 
 
@@ -49,7 +54,7 @@ class FalseDepthBackground:
     depth_delta = 10
     depth_factor = 0.8  # depth_factor size & speed for depth = depth_delta; depth_factor^2 for depth = 2*depth_delta, ...
 
-    def __init__(self, layer_count=2, initial_speed=10, background_depth=100):
+    def __init__(self, layer_count=2, initial_speed=100, background_depth=100):
         assert layer_count > 0 and type(layer_count) == int
         assert initial_speed >= 0
         assert background_depth >= layer_count * 10 and type(background_depth) == int
@@ -77,18 +82,18 @@ class FalseDepthBackground:
             self.layers_speed.append(cur_layer_speed)
 
     def _init_layers(self, screen: pygame.Surface):
-        colors=["red","green"]
+        colors = ["red", "green"]
         for i in range(self.layer_count):
             layer = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA, 32)
             self.layers.append(layer)
-            self.layer_star_coords.append(Stars.random_coords(layer,10))
+            self.layer_star_coords.append(Stars.random_coords(layer, 10))
 
     def _draw_layer(self, layer_index, screen: pygame.Surface):
         layer = self.layers[layer_index]
         distance = self.layers_distance[layer_index]
         speed = self.layers_speed[layer_index]
         coordinates = self.layer_star_coords[layer_index]
-        Stars(distance, speed).draw(layer,coordinates, True)
+        Stars(distance, speed, 7).draw(layer, coordinates, True)
 
         screen.blit(layer, (self.layers_translate[layer_index], 0))
 
