@@ -11,7 +11,7 @@ class Stars:
     @staticmethod
     def index(speed):
         factor = 2
-        s = 0
+        s = 5
         index = 0
         while s < speed:
             if index >= Stars.max_sprite_index:
@@ -26,10 +26,10 @@ class Stars:
         return [(randint(0, surface.get_width()), randint(0, surface.get_height())) for _ in range(count)]
 
     def __init__(self, distance, speed, star_size):
-        assert distance >= 0 and speed >= 0
+        assert distance >= 0
         self.distance = distance
         self.speed = speed
-        self.star_size=star_size
+        self.star_size = star_size
         self.star = None
         self.sprite_index = Stars.index(self.speed)
         self._load_sprites()
@@ -54,7 +54,7 @@ class FalseDepthBackground:
     depth_delta = 10
     depth_factor = 0.8  # depth_factor size & speed for depth = depth_delta; depth_factor^2 for depth = 2*depth_delta, ...
 
-    def __init__(self, layer_count=2, initial_speed=100, background_depth=100):
+    def __init__(self, layer_count=2, initial_speed=40, background_depth=100):
         assert layer_count > 0 and type(layer_count) == int
         assert initial_speed >= 0
         assert background_depth >= layer_count * 10 and type(background_depth) == int
@@ -67,6 +67,7 @@ class FalseDepthBackground:
         self.layers_speed = []
         self.layers_translate = [0] * layer_count
         self.layer_star_coords = []
+        self.star_size = 7
 
     def _eval_layer_params(self):
         cur_layer_distance = self.background_depth
@@ -93,9 +94,10 @@ class FalseDepthBackground:
         distance = self.layers_distance[layer_index]
         speed = self.layers_speed[layer_index]
         coordinates = self.layer_star_coords[layer_index]
-        Stars(distance, speed, 7).draw(layer, coordinates, True)
+        Stars(distance, speed, self.star_size).draw(layer, coordinates, True)
 
         screen.blit(layer, (self.layers_translate[layer_index], 0))
+        screen.blit(layer,(self.layers_translate[layer_index]-layer.get_width(), 0))
 
     def draw(self, screen: pygame.Surface):
         if len(self.layers) <= self.layer_count:
@@ -112,6 +114,10 @@ class FalseDepthBackground:
 
     def slow_down(self, delta):
         self.movement_speed = max(0, self.movement_speed - delta)
+
+    def reverse(self):
+        self.movement_speed=-self.movement_speed
+        self.layers_translate=[-x for x in self.layers_translate]
 
     def stop(self):
         self.movement_speed = 0

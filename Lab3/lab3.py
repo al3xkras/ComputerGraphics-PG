@@ -15,20 +15,23 @@ class Lab3:
     FONT_BOLD = False
     FLAGS = pygame.DOUBLEBUF | pygame.HWSURFACE
 
-    def __init__(self):
+    def __init__(self, initial_speed=0, bg_layer_count=15, bg_depth=200):
         self.screen = None
         self.background = None
         self.spacecraft = None
         self.hotkey_thread = None
+        self.initial_speed=initial_speed
+        self.bg_layer_count = bg_layer_count
+        self.bg_depth = bg_depth
         self.warp = 0
 
     def setup(self, setup_hotkeys=True):
-        self.background = FalseDepthBackground(layer_count=3)
+        self.background = FalseDepthBackground(self.bg_layer_count, self.initial_speed, self.bg_depth)
         self.spacecraft = Spacecraft()
 
         if setup_hotkeys:
             self.hotkey_thread = Thread(target=self._setup_hotkeys)
-            self.hotkey_thread.daemon=True
+            self.hotkey_thread.daemon = True
             self.hotkey_thread.start()
 
         self.screen = self._pygame_screen_setup()
@@ -41,9 +44,9 @@ class Lab3:
 
     def _setup_hotkeys(self):
         with keyboard.GlobalHotKeys({
-                'a': self.speed_up,
-                'b': self.slow_down,
-                '<ctrl>+c': quit}) as h:
+            'a': self.speed_up,
+            'b': self.slow_down,
+            '<ctrl>+c': quit}) as h:
             h.join()
 
     def _pygame_screen_setup(self):
@@ -70,7 +73,7 @@ class Lab3:
             screen.fill((0x00, 0x00, 0x00))
 
             self.background.draw(screen)
-            #self.spacecraft.draw(screen)
+            # self.spacecraft.draw(screen)
 
             pygame.display.flip()
 
@@ -78,6 +81,7 @@ class Lab3:
 if __name__ == '__main__':
     from pygame.locals import *
 
-    lab3 = Lab3()
+    lab3 = Lab3(bg_layer_count=15, initial_speed=300,bg_depth=300)
     lab3.setup()
+    lab3.background.reverse()
     lab3.mainloop()
