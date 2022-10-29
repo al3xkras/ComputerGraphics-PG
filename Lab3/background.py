@@ -12,7 +12,7 @@ class Stars:
         factor = 2
         s = 0
         index = 0
-        while s <= speed:
+        while s < speed:
             if index >= Stars.max_sprite_index:
                 return min(Stars.max_sprite_index, index)
             s = s * factor if s != 0 else factor
@@ -47,12 +47,11 @@ class Stars:
             layer.blit(self.star, coords)
 
         self.star.set_alpha(1.0)
-        pass
 
 
 class FalseDepthBackground:
     depth_delta = 10
-    depth_factor = 0.8 # depth_factor size & speed for depth = depth_delta; depth_factor^2 for depth = 2*depth_delta, ...
+    depth_factor = 0.8  # depth_factor size & speed for depth = depth_delta; depth_factor^2 for depth = 2*depth_delta, ...
 
     def __init__(self, layer_count=2, initial_speed=0, background_depth=100):
         assert layer_count > 0 and type(layer_count) == int
@@ -65,6 +64,7 @@ class FalseDepthBackground:
         self.layers = []
         self.layers_distance = []
         self.layers_speed = []
+        self.layers_translate = [0] * layer_count
 
     def _eval_layer_params(self):
         cur_layer_distance = self.background_depth
@@ -81,7 +81,7 @@ class FalseDepthBackground:
 
     def _init_layers(self, screen: pygame.Surface):
         for i in range(self.layer_count):
-            layer = pygame.Surface(screen)
+            layer = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA, 32)
             self.layers.append(layer)
 
     def _draw_layer(self, layer_index, screen: pygame.Surface):
@@ -89,19 +89,26 @@ class FalseDepthBackground:
         distance = self.layers_distance[layer_index]
         speed = self.layers_speed[layer_index]
 
-        Stars.draw(layer, distance, speed)
+        count = 10
+        Stars(distance, speed).draw(layer, count, True)
+
+        screen.blit(layer, (0, 0))
 
     def draw(self, screen: pygame.Surface):
         if len(self.layers) <= self.layer_count:
             self.layers = []
             self._init_layers(screen)
         self._eval_layer_params()
+        self.layers_translate = [(self.layers_translate[i] + self.layers_speed[i]) % screen.get_width()
+                                 for i in range(self.layer_count)]
+        for i in range(self.layer_count):
+            self._draw_layer(i, screen)
 
     def speed_up(self, delta):
-        pass
+        self.movement_speed += delta
 
     def slow_down(self, delta):
-        pass
+        self.movement_speed = max(0, self.movement_speed - delta)
 
     def stop(self):
-        pass
+        self.movement_speed = 0
