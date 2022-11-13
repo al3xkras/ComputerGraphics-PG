@@ -6,6 +6,26 @@ import os
 
 from background import FalseDepthBackground
 from spacecraft import Spacecraft
+import threading
+
+
+class CountDownLatch(object):
+    def __init__(self, count=1):
+        self.count = count
+        self.lock = threading.Condition()
+
+    def count_down(self):
+        self.lock.acquire()
+        self.count -= 1
+        if self.count <= 0:
+            self.lock.notify_all()
+        self.lock.release()
+
+    def await_countdown(self):
+        self.lock.acquire()
+        while self.count > 0:
+            self.lock.wait()
+        self.lock.release()
 
 
 class SpaceshipInfo:
@@ -27,6 +47,7 @@ class Lab3:
     warp_min = 0
     warp_max = 10
     contestant_spaceship_warp_speed = 5
+
     def __init__(self, initial_speed=0, bg_layer_count=15, bg_depth=200):
         self.screen = None
         self.background = None
@@ -42,11 +63,14 @@ class Lab3:
         self.distance_traveled_spaceship1 = 0
         self.distance_traveled_spaceship2 = 0
 
+        self.latch = CountDownLatch()
+        self.draw = True
+
     def setup(self, setup_hotkeys=True):
         self.background = FalseDepthBackground(self.bg_layer_count, self.initial_speed, self.bg_depth)
         self.spacecraft = Spacecraft(displaySize=Lab3.WINDOW_SIZE)
         self.spaceship_info = SpaceshipInfo(lambda: self.warp)
-        self.contestant_spacecraft = Spacecraft(displaySize=Lab3.WINDOW_SIZE,sprite="contestant_spaceship.png")
+        self.contestant_spacecraft = Spacecraft(displaySize=Lab3.WINDOW_SIZE, sprite="contestant_spaceship.png")
         if setup_hotkeys:
             self.hotkey_thread = Thread(target=self._setup_hotkeys)
             self.hotkey_thread.daemon = True
@@ -73,8 +97,10 @@ class Lab3:
             if hasattr(key, 'vk') and key.vk == 12:
                 self.stop()
 
-            if key == keyboard.Key.esc:
-                return False  # stop listener
+            if hasattr(key, 'vk') and key.vk == 81:
+                self.draw = False
+                self.latch.await_countdown()
+                exit()
 
             if hasattr(key, 'name'):
                 if key.name == "left":
@@ -85,6 +111,8 @@ class Lab3:
                     self.spacecraft.move(-Lab3.WINDOW_SIZE[1] / 10)
                 elif key.name == "down":
                     self.spacecraft.move(Lab3.WINDOW_SIZE[1] / 10)
+                elif key.name == "q" or key.name == "Q":
+                    self.exit()
 
         with keyboard.Listener(on_press=on_press) as l:
             l.join()
@@ -94,19 +122,25 @@ class Lab3:
         os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % Lab3.WINDOW_POSITION
         return pygame.display.set_mode(Lab3.WINDOW_SIZE, Lab3.FLAGS)
 
-    def stop(self):
+    def exit(self):
+        pygame.display.quit()
         pygame.quit()
         exit()
+
+    def stop(self):
+        self.warp = 0
+        self.spacecraft.stop()
+        self.background.stop()
 
     def mainloop(self):
 
         self.spacecraft.move(Lab3.WINDOW_SIZE[1] / 2)
         clock = pygame.time.Clock()
-        while True:
+        while self.draw:
             clock.tick(30)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    self.stop()
+                    self.exit()
 
             screen = self.screen
             screen.fill((0x00, 0x00, 0x00))
@@ -114,16 +148,18 @@ class Lab3:
             self.background.draw(screen)
             self.spaceship_info.draw(screen)
 
-            self.distance_traveled += self.warp*2
-            self.distance_traveled_spaceship1 += self.warp*2
-            self.distance_traveled_spaceship2 += Lab3.contestant_spaceship_warp_speed*2
+            self.distance_traveled += self.warp * 2
+            self.distance_traveled_spaceship1 += self.warp * 2
+            self.distance_traveled_spaceship2 += Lab3.contestant_spaceship_warp_speed * 2
 
-            self.spacecraft.speed_up(self.distance_traveled_spaceship1-self.distance_traveled)
-            self.contestant_spacecraft.speed_up(self.distance_traveled_spaceship2-self.distance_traveled)
+            self.spacecraft.speed_up(self.distance_traveled_spaceship1 - self.distance_traveled)
+            self.contestant_spacecraft.speed_up(self.distance_traveled_spaceship2 - self.distance_traveled)
 
-            self.contestant_spacecraft.draw(screen)
             self.spacecraft.draw(screen)
+            self.contestant_spacecraft.draw(screen)
             pygame.display.flip()
+
+        self.latch.count_down()
 
 
 if __name__ == '__main__':

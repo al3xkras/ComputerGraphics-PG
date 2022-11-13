@@ -100,7 +100,6 @@ class FalseDepthBackground:
             self.layers_speed[i] = cur_layer_speed
 
     def _init_layers(self, screen: pygame.Surface):
-        colors = ["red", "green"]
         for i in range(self.layer_count):
             layer = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA, 32)
             self.layers.append(layer)
@@ -140,3 +139,4 @@ class FalseDepthBackground:
 
     def stop(self):
         self.movement_speed = 0
+        self._update_layer_params()
