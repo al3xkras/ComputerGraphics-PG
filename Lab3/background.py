@@ -72,6 +72,7 @@ class FalseDepthBackground:
         self.layers_translate = [0] * layer_count
         self.layer_star_coords = []
         self.star_size = star_size
+        self.rev = False
 
     def _eval_layer_params(self):
         cur_layer_distance = self.background_depth
@@ -126,14 +127,19 @@ class FalseDepthBackground:
             self._draw_layer(i, screen)
 
     def speed_up(self, delta):
+        if self.rev:
+            delta = -delta
         self.movement_speed += delta
         self._update_layer_params()
 
     def slow_down(self, delta):
+        if self.rev:
+            delta = -delta
         self.movement_speed -= delta
         self._update_layer_params()
 
     def reverse(self):
+        self.rev = not self.rev
         self.movement_speed = -self.movement_speed
         self.layers_translate = [-x for x in self.layers_translate]
 
