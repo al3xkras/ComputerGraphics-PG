@@ -56,7 +56,8 @@ class Stars:
 
 class FalseDepthBackground:
     depth_delta = 10
-    depth_factor = 0.8  # depth_factor size & speed for depth = depth_delta; depth_factor^2 for depth = 2*depth_delta, ...
+    depth_factor = 0.8  # depth_factor size & speed for depth = depth_delta; depth_factor^2 for depth =
+    # 2*depth_delta, ...
 
     def __init__(self, layer_count=2, initial_speed=40, background_depth=100, star_size=7):
         assert layer_count > 0 and type(layer_count) == int
