@@ -4,9 +4,9 @@ import sympy as sp
 
 class Hex:
     neigh_directions={
-            "l":(0,-1),"r":(0,1),
-            "lu":(1,-1),"ru":(1,1),
-            "ld":(2,-1),"rd":(2,1)
+        "l":(0,-1),"r":(0,1),
+        "lu":(1,-1),"ru":(1,1),
+        "ld":(2,-1),"rd":(2,1)
     }
     inverse_direction = {
         "l": "r", "r": "l",
@@ -30,13 +30,10 @@ class Hex:
     def getCenterCoordsInPx(self):
         return [x.subs((Hex.i,Hex.j,Hex.k),self.coordinates).evalf()]
 
-    def isContainedInRectangle(self,rect):
-        #rect: x1 y1 x2 y2
-        x1,y1,x2,y2=rect
-        rect_poly = Polygon([(x1, y1), (x2, y1), (x2, y2),(x1,y2)])
-        x,y = hex_center=self.getCenterCoordsInPx()
-        h1x = x-Hex.i*sp.sqrt(3) / 2
-        h1y = y-i / 2
+    def getHexCoords(self):
+        x, y = hex_center = self.getCenterCoordsInPx()
+        h1x = x - Hex.i * sp.sqrt(3) / 2
+        h1y = y - i / 2
         h2x = x - Hex.i * sp.sqrt(3) / 2
         h2y = y + i / 2
         h3x = x
@@ -48,13 +45,18 @@ class Hex:
         h6x = x + Hex.i * sp.sqrt(3) / 2
         h6y = y + i / 2
         hex_coords = [
-            (h1x,h1y),(h2x,h2y),
-            (h3x,h3y),(h4x,h4y),
-            (h5x,h5y),(h6x,h6y),
+            (h1x, h1y), (h2x, h2y),
+            (h3x, h3y), (h4x, h4y),
+            (h5x, h5y), (h6x, h6y),
         ]
-        hex_coords = [tuple(_x.subs(Hex.i,self.hex_width) for _x in _x2) for _x2 in hex_coords]
-        hex_poly = Polygon(hex_coords)
+        hex_coords = [tuple(_x.subs(Hex.i, self.hex_width) for _x in _x2) for _x2 in hex_coords]
+        return hex_coords
 
+    def isContainedInRectangle(self,rect):
+        #rect: x1 y1 x2 y2
+        x1,y1,x2,y2=rect
+        rect_poly = Polygon([(x1, y1), (x2, y1), (x2, y2),(x1,y2)])
+        hex_poly = Polygon(self.getHexCoords())
         return rect_poly.intersects(hex_poly)
 
     def createNeighbour(self, hexmap, location:str, hex_type, replace_if_exists=False):
@@ -95,6 +97,9 @@ class HexMap:
 
     def _appendHex(self, hex):
         self.hex_dict[hex.coordinates]=hex
+
+    def _nextRandomHexType(self):
+        return "plains"
 
     def _fillMapRectangleWithHexes(self):
         first_hex=Hex("plains",(0,0,0))
