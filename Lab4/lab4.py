@@ -1,8 +1,9 @@
 import pygame.gfxdraw
 from sys import exit
 import os
-
-
+import threading
+from hex_map import HexMap,Hex
+from pynput import keyboard
 
 class CountDownLatch(object):
     def __init__(self, count=1):
@@ -25,16 +26,23 @@ class CountDownLatch(object):
 
 
 class ProjectHexMap:
+    WINDOW_SIZE = (900, 700)
+    WINDOW_POSITION = (500, 30)
+    FONT_SIZE = 24
+    FONT_BOLD = False
+    FLAGS = pygame.DOUBLEBUF | pygame.HWSURFACE
     def __init__(self):
         self.draw=True
-
-    def start(self):
-        pass
+        self.latch=CountDownLatch(1)
+        self.screen=None
 
     def _pygame_screen_setup(self):
         pygame.init()
-        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % Lab3.WINDOW_POSITION
-        return pygame.display.set_mode(Lab3.WINDOW_SIZE, Lab3.FLAGS)
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % ProjectHexMap.WINDOW_POSITION
+        return pygame.display.set_mode(ProjectHexMap.WINDOW_SIZE, ProjectHexMap.FLAGS)
+
+    def setup(self):
+        self.screen=self._pygame_screen_setup()
 
     def exit(self):
         pygame.display.quit()
@@ -43,8 +51,6 @@ class ProjectHexMap:
 
     def _setup_hotkeys(self):
         def on_press(key):
-            if hasattr(key, 'vk') and key.vk == 12:
-                self.stop()
 
             if hasattr(key, 'vk') and key.vk == 81:
                 self.draw = False
@@ -66,15 +72,23 @@ class ProjectHexMap:
         with keyboard.Listener(on_press=on_press) as l:
             l.join()
 
-    def _mainloop(self):
+    def mainloop(self):
+        self.setup()
+        #hexmap=HexMap(ProjectHexMap.WINDOW_SIZE)
         clock = pygame.time.Clock()
         while self.draw:
             clock.tick(30)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.exit()
+            self.screen.fill((0xff, 0xff, 0xff))
+            s=pygame.Surface(size=(500,500))
+
+            Hex("plains",(0,0,0)).draw(s)
+            s.blit(self.screen,(100,100))
+            pygame.display.flip()
         self.latch.count_down()
 
 if __name__ == '__main__':
     hmap = ProjectHexMap()
-    hmap.start()
+    hmap.mainloop()
