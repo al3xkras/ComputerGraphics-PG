@@ -3,6 +3,7 @@ from collections import deque
 import pygame
 from shapely.geometry import Polygon
 import sympy as sp
+from numpy import dot
 
 class Hex:
     neigh_directions={
@@ -38,6 +39,18 @@ class Hex:
     def __str__(self) -> str:
         return "Hex("+self.hex_type+" "+str(self.coordinates)+")"
 
+    @staticmethod
+    def draw_arrow(surface,_from,_to,color):
+        pygame.draw.line(surface,color,_from,_to)
+        w=(_from[0]-_to[0])**2+(_from[1]-_to[1])**2
+        w=int(max(2,w**0.5/5))
+        d=(_to[0]-_from[0],_to[1]-_from[1])
+        d=[x*5/w for x in d]
+        d_ort=[-d[1]/5,d[0]/5]
+        pygame.draw.line(surface,color,(_to[0]-d[0]+d_ort[0],_to[1]-d[1]+d_ort[1]),_to)
+        pygame.draw.line(surface,color,(_to[0]-d[0]-d_ort[0],_to[1]-d[1]-d_ort[1]),_to)
+
+
     def draw(self,surface:pygame.Surface):
         self.offset=[surface.get_width()//2,surface.get_height()//2]
         hex_coords=self.getHexCoords()
@@ -53,7 +66,15 @@ class Hex:
             p1=hex_coords[i]
             p2=hex_coords[(i+1)%len(hex_coords)]
             pygame.draw.line(surface,color="black",start_pos=p1,end_pos=p2)
-        pygame.draw.circle(surface,center=center,radius=Hex.hex_width//2,color="red")
+        #pygame.draw.circle(surface,center=center,radius=Hex.hex_width//2,color="red")
+        for _x in self.neigh_directions:
+            if not _x in self.neighbours:
+                continue
+            x=self.neighbours[_x]
+            c=[int(_) for _ in x.getCenterCoordsInPx()]
+            c[0] += self.offset[0]
+            c[1] += self.offset[1]
+            Hex.draw_arrow(surface,center,c,"green")
 
 
     def getCenterCoordsInPx(self, scale=False):
@@ -91,7 +112,6 @@ class Hex:
         #rect: x1 y1 x2 y2
         x1,y1,x2,y2=rect
         rect_poly = Polygon([(x1, y1), (x2, y1), (x2, y2),(x1,y2)])
-        center=[int(x) for x in self.getCenterCoordsInPx()]
         hex_poly = Polygon(self.getHexCoords())
         return rect_poly.contains(hex_poly)
 
@@ -116,6 +136,14 @@ class Hex:
         _hex.neighbours[self_loc_for_neigh]=self
         self.neighbours[location]=_hex
         return _hex, _created
+
+    @staticmethod
+    def transform(coordinates):
+        return (0,
+            coordinates[1]+coordinates[0],
+            coordinates[2]+coordinates[0]
+        )
+
 
 class HexMap:
     graphics_dir = "./graphics"
@@ -165,7 +193,7 @@ class HexMap:
         self._appendHex(first_hex)
         horizon=deque([first_hex])
         horizon_next=deque()
-        hex_count_mock=700
+        hex_count_mock=300
         hex_count=0
         while len(horizon)>0:
             for _hex in horizon:
@@ -188,8 +216,10 @@ class HexMap:
                 print()
             horizon=horizon_next
             horizon_next=deque()
+        print(first_hex.neighbours)
 
     def getHexByCoordinates(self, coordinates):
+        coordinates=Hex.transform(coordinates)
         return self.hex_dict[coordinates]
 
 if __name__ == '__main__':
