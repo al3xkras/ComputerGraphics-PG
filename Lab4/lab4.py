@@ -26,7 +26,7 @@ class CountDownLatch(object):
 
 
 class ProjectHexMap:
-    WINDOW_SIZE = (900, 700)
+    WINDOW_SIZE = (900, 600)
     WINDOW_POSITION = (500, 30)
     FONT_SIZE = 24
     FONT_BOLD = False
@@ -74,6 +74,7 @@ class ProjectHexMap:
 
     def mainloop(self):
         self.setup()
+        hm = HexMap(ProjectHexMap.WINDOW_SIZE)
         #hexmap=HexMap(ProjectHexMap.WINDOW_SIZE)
         clock = pygame.time.Clock()
         while self.draw:
@@ -82,8 +83,6 @@ class ProjectHexMap:
                 if event.type == pygame.QUIT:
                     self.exit()
             self.screen.fill((0xff, 0xff, 0xff))
-
-            hm=HexMap(ProjectHexMap.WINDOW_SIZE)
             hm.draw(self.screen)
             pygame.display.flip()
         self.latch.count_down()

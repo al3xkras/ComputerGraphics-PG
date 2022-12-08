@@ -15,7 +15,7 @@ class Hex:
         "lu": "rd", "rd": "lu",
         "ld": "ru", "ru": "ld"
     }
-    hex_width=20 #px
+    hex_width=50 #px
     i,j,k=sp.symbols("i,j,k")
     center_coordinates_eq = (i * sp.sqrt(3) + j * sp.sqrt(3) / 4 + k * sp.sqrt(3) / 4,
                              j * 3 / 4 - k * 3 / 4)
@@ -35,20 +35,21 @@ class Hex:
         return "Hex("+self.hex_type+" "+str(self.coordinates)+")"
 
     def draw(self,surface:pygame.Surface):
-        self.offset=(surface.get_width()//2,surface.get_height()//2)
-        offset=self.offset
-        center_coords=self.getCenterCoordsInPx(True)
+        self.offset=[surface.get_width()//2,surface.get_height()//2]
         hex_coords=self.getHexCoords()
-        for c in hex_coords:
-            c[0]+=offset[0]
-            c[1]+=offset[1]
-        center_coords[0]+=offset[0]
-        center_coords[1]+=offset[1]
+        center=self.getCenterCoordsInPx()
+        center=[int(x) for x in center]
+        center[0] += self.offset[0]
+        center[1] += self.offset[1]
+        for x in hex_coords:
+            x[0] += self.offset[0]
+            x[1] += self.offset[1]
+
         for i in range(len(hex_coords)):
             p1=hex_coords[i]
             p2=hex_coords[(i+1)%len(hex_coords)]
             pygame.draw.line(surface,color="black",start_pos=p1,end_pos=p2)
-        #pygame.draw.circle(surface,center=center_coords,radius=Hex.hex_width,color="red")
+        pygame.draw.circle(surface,center=center,radius=Hex.hex_width//2,color="red")
 
 
     def getCenterCoordsInPx(self, scale=False):
@@ -57,7 +58,7 @@ class Hex:
                 for x in Hex.center_coordinates_eq)
         if not scale:
             return c
-        return [int(c[0]*Hex.scale)+self.offset[0],int(c[1]*Hex.scale)+self.offset[1]]
+        return int(c[0]*Hex.scale),int(c[1]*Hex.scale)
 
     def getHexCoords(self):
         x, y = self.getCenterCoordsInPx()
@@ -79,6 +80,7 @@ class Hex:
             (h5x, h5y), (h3x, h3y),
         ]
         hex_coords = [list(int(_x.subs(Hex.i, self.hex_width)*Hex.scale) for _x in _x2) for _x2 in hex_coords]
+
         return hex_coords
 
     def isContainedInRectangle(self,rect):
@@ -117,20 +119,30 @@ class HexMap:
     }
 
     def __init__(self, map_size):
+        self._hex_list = None
         self.map_size=map_size
         self.zoom_factor=1.0
         self.hex_dict=dict()
         self.map_rect=(
             -self.map_size[0]//2,
-            self.map_size[1]//2,
             -self.map_size[1]//2,
+            self.map_size[0]//2,
             self.map_size[1]//2
         )
+        self._cached_surface=None
+
+    def prepare(self,surface):
+        self._fillMapRectangleWithHexes()
+        if self._cached_surface is None:
+            self._cached_surface=pygame.Surface((surface.get_width(),surface.get_height()))
+            self._cached_surface.fill((0xff, 0xff, 0xff))
+            for x in self.hex_dict.values():
+                x.draw(self._cached_surface)
 
     def draw(self,surface):
-        self._fillMapRectangleWithHexes()
-        for x in self.hex_dict.values():
-            x.draw(surface)
+        if self._cached_surface is None:
+            self.prepare(surface)
+        surface.blit(self._cached_surface.copy(),(0,0))
 
     def _appendHex(self, hex_obj):
         self.hex_dict[hex_obj.coordinates]=hex_obj
@@ -143,13 +155,13 @@ class HexMap:
         self._appendHex(first_hex)
         horizon=deque([first_hex])
         horizon_next=deque()
-        hex_count_mock=5
+        hex_count_mock=1200
         hex_count=0
         while len(horizon)>0:
             for _hex in horizon:
                 for direction in Hex.neigh_directions:
-                    neighbour,created=_hex.createNeighbour(self,direction,self._nextRandomHexType())
-                    if not created or not neighbour.isContainedInRectangle(self.map_rect):
+                    neighbour,_created=_hex.createNeighbour(self,direction,self._nextRandomHexType())
+                    if not _created or not neighbour.isContainedInRectangle(self.map_rect):
                         continue
                     horizon_next.append(neighbour)
                     hex_count+=1
@@ -157,6 +169,7 @@ class HexMap:
                         print("hex map overflow: ",hex_count)
                         return
             horizon=horizon_next
+            horizon_next=deque()
 
     def getHexByCoordinates(self, coordinates):
         return self.hex_dict[coordinates]
