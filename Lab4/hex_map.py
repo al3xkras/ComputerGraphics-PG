@@ -15,7 +15,7 @@ class Hex:
         "lu": "rd", "rd": "lu",
         "ld": "ru", "ru": "ld"
     }
-    hex_width=50 #px
+    hex_width=60 #px
     i,j,k=sp.symbols("i,j,k")
     center_coordinates_eq = (i * sp.sqrt(3) + j * sp.sqrt(3) / 4 + k * sp.sqrt(3) / 4,
                              j * 3 / 4 - k * 3 / 4)
@@ -25,7 +25,11 @@ class Hex:
         if neighbours is None:
             neighbours = dict()
         assert hex_type in HexMap.hex_types
-        self.coordinates=coordinates
+
+        self.coordinates=(0,
+            coordinates[1]+coordinates[0],
+            coordinates[2]+coordinates[0]
+        )
         self.hex_type=hex_type
         self.neighbours=neighbours
         self.hex_width=Hex.hex_width
@@ -87,10 +91,11 @@ class Hex:
         #rect: x1 y1 x2 y2
         x1,y1,x2,y2=rect
         rect_poly = Polygon([(x1, y1), (x2, y1), (x2, y2),(x1,y2)])
+        center=[int(x) for x in self.getCenterCoordsInPx()]
         hex_poly = Polygon(self.getHexCoords())
-        return rect_poly.intersects(hex_poly)
+        return rect_poly.contains(hex_poly)
 
-    def createNeighbour(self, hexmap, location:str, hex_type, replace_if_exists=False):
+    def createNeighbour(self, hexmap, location:str, hex_type, rect, replace_if_exists=False):
         if location in self.neighbours and not replace_if_exists:
             return self.neighbours[location], False
         coords = [x for x in self.coordinates]
@@ -99,14 +104,18 @@ class Hex:
         coords=tuple(x for x in coords)
         self_loc_for_neigh=Hex.inverse_direction[location]
         _hex=None
+        _created=True
         if coords in hexmap.hex_dict:
             _hex=hexmap.getHexByCoordinates(coords)
+            _created=False
         else:
             _hex=Hex(hex_type,coords,dict())
+            if not _hex.isContainedInRectangle(rect):
+                return None, False
+            hexmap.hex_dict[coords]=_hex
         _hex.neighbours[self_loc_for_neigh]=self
         self.neighbours[location]=_hex
-        hexmap.hex_dict[_hex.coordinates]=_hex
-        return _hex, True
+        return _hex, _created
 
 class HexMap:
     graphics_dir = "./graphics"
@@ -138,6 +147,7 @@ class HexMap:
             self._cached_surface.fill((0xff, 0xff, 0xff))
             for x in self.hex_dict.values():
                 x.draw(self._cached_surface)
+        pygame.draw.rect(surface,"black",self.map_rect)
 
     def draw(self,surface):
         if self._cached_surface is None:
@@ -155,19 +165,27 @@ class HexMap:
         self._appendHex(first_hex)
         horizon=deque([first_hex])
         horizon_next=deque()
-        hex_count_mock=1200
+        hex_count_mock=700
         hex_count=0
         while len(horizon)>0:
             for _hex in horizon:
+                if not _hex.isContainedInRectangle(self.map_rect):
+                    continue
                 for direction in Hex.neigh_directions:
-                    neighbour,_created=_hex.createNeighbour(self,direction,self._nextRandomHexType())
-                    if not _created or not neighbour.isContainedInRectangle(self.map_rect):
+                    neighbour,_created=_hex.createNeighbour(self,direction,self._nextRandomHexType(),self.map_rect)
+                    if not _created:
+                        continue
+                    if not neighbour.isContainedInRectangle(self.map_rect):
+                        print("a",neighbour)
                         continue
                     horizon_next.append(neighbour)
                     hex_count+=1
                     if hex_count>hex_count_mock:
                         print("hex map overflow: ",hex_count)
                         return
+                for x in horizon_next:
+                    print(x,end=" ")
+                print()
             horizon=horizon_next
             horizon_next=deque()
 
@@ -177,9 +195,12 @@ class HexMap:
 if __name__ == '__main__':
     hm=HexMap((100,100))
 
-    h1=Hex("plains",(0,0,0))
-    h2,created=h1.createNeighbour(hm,"r","plains")
-    _,created1=h2.createNeighbour(hm, "rd", "plains")
-    print(h2,_,created,created1)
+    #h1=Hex("plains",(-16,31,30))
+    h1=Hex("plains",(0,1,30))
 
+    p=h1.isContainedInRectangle([
+        -450,-300,450,300
+    ])
+    print(p)
     print(h1.getCenterCoordsInPx())
+    print(h1.getHexCoords())
