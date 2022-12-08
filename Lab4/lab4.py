@@ -82,10 +82,9 @@ class ProjectHexMap:
                 if event.type == pygame.QUIT:
                     self.exit()
             self.screen.fill((0xff, 0xff, 0xff))
-            s=pygame.Surface(size=(500,500))
 
-            Hex("plains",(0,0,0)).draw(s)
-            s.blit(self.screen,(100,100))
+            hm=HexMap(ProjectHexMap.WINDOW_SIZE)
+            hm.draw(self.screen)
             pygame.display.flip()
         self.latch.count_down()
 

@@ -15,10 +15,11 @@ class Hex:
         "lu": "rd", "rd": "lu",
         "ld": "ru", "ru": "ld"
     }
-    hex_width=100 #px
+    hex_width=20 #px
     i,j,k=sp.symbols("i,j,k")
-    center_coordinates_eq = (i * sp.sqrt(3) / 2 + (j * 3) / 4 + (k * 3) / 4, j * sp.sqrt(3) / 2 - k * sp.sqrt(3) / 2)
-    scale=100
+    center_coordinates_eq = (i * sp.sqrt(3) + j * sp.sqrt(3) / 4 + k * sp.sqrt(3) / 4,
+                             j * 3 / 4 - k * 3 / 4)
+    scale=1
 
     def __init__(self, hex_type, coordinates, neighbours=None):
         if neighbours is None:
@@ -28,26 +29,35 @@ class Hex:
         self.hex_type=hex_type
         self.neighbours=neighbours
         self.hex_width=Hex.hex_width
+        self.offset=[0,0]
 
     def __str__(self) -> str:
         return "Hex("+self.hex_type+" "+str(self.coordinates)+")"
 
     def draw(self,surface:pygame.Surface):
+        self.offset=(surface.get_width()//2,surface.get_height()//2)
+        offset=self.offset
         center_coords=self.getCenterCoordsInPx(True)
         hex_coords=self.getHexCoords()
+        for c in hex_coords:
+            c[0]+=offset[0]
+            c[1]+=offset[1]
+        center_coords[0]+=offset[0]
+        center_coords[1]+=offset[1]
         for i in range(len(hex_coords)):
             p1=hex_coords[i]
-            p2=hex_coords[i%len(hex_coords)]
-            pygame.draw.line(surface,color="white",start_pos=p1,end_pos=p2)
-        pygame.draw.circle(surface,center=center_coords,radius=Hex.hex_width/2,color="red")
+            p2=hex_coords[(i+1)%len(hex_coords)]
+            pygame.draw.line(surface,color="black",start_pos=p1,end_pos=p2)
+        #pygame.draw.circle(surface,center=center_coords,radius=Hex.hex_width,color="red")
 
 
     def getCenterCoordsInPx(self, scale=False):
-        c = tuple(x.subs(Hex.i,self.coordinates[0]).subs(Hex.j,self.coordinates[1]).subs(Hex.k,self.coordinates[2]).evalf()
+        w=self.hex_width*2
+        c = tuple(x.subs(Hex.i,self.coordinates[0]*w).subs(Hex.j,self.coordinates[1]*w).subs(Hex.k,self.coordinates[2]*w).evalf()
                 for x in Hex.center_coordinates_eq)
         if not scale:
             return c
-        return [int(x*Hex.scale) for x in c]
+        return [int(c[0]*Hex.scale)+self.offset[0],int(c[1]*Hex.scale)+self.offset[1]]
 
     def getHexCoords(self):
         x, y = self.getCenterCoordsInPx()
@@ -65,10 +75,10 @@ class Hex:
         h6y = y + Hex.i / 2
         hex_coords = [
             (h1x, h1y), (h2x, h2y),
-            (h3x, h3y), (h4x, h4y),
-            (h5x, h5y), (h6x, h6y),
+            (h4x, h4y), (h6x, h6y),
+            (h5x, h5y), (h3x, h3y),
         ]
-        hex_coords = [tuple(int(_x.subs(Hex.i, self.hex_width)*Hex.scale) for _x in _x2) for _x2 in hex_coords]
+        hex_coords = [list(int(_x.subs(Hex.i, self.hex_width)*Hex.scale) for _x in _x2) for _x2 in hex_coords]
         return hex_coords
 
     def isContainedInRectangle(self,rect):
