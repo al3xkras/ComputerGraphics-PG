@@ -1,9 +1,8 @@
 from collections import deque
 
 import pygame
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon,Point
 import sympy as sp
-from numpy import dot
 
 class Hex:
     neigh_directions={
@@ -16,7 +15,7 @@ class Hex:
         "lu": "rd", "rd": "lu",
         "ld": "ru", "ru": "ld"
     }
-    hex_width=60 #px
+    hex_width=15 #px
     i,j,k=sp.symbols("i,j,k")
     center_coordinates_eq = (i * sp.sqrt(3) + j * sp.sqrt(3) / 4 + k * sp.sqrt(3) / 4,
                              j * 3 / 4 - k * 3 / 4)
@@ -74,7 +73,7 @@ class Hex:
             c=[int(_) for _ in x.getCenterCoordsInPx()]
             c[0] += self.offset[0]
             c[1] += self.offset[1]
-            Hex.draw_arrow(surface,center,c,"green")
+            #Hex.draw_arrow(surface,center,c,"green")
 
 
     def getCenterCoordsInPx(self, scale=False):
@@ -109,11 +108,9 @@ class Hex:
         return hex_coords
 
     def isContainedInRectangle(self,rect):
-        #rect: x1 y1 x2 y2
         x1,y1,x2,y2=rect
         rect_poly = Polygon([(x1, y1), (x2, y1), (x2, y2),(x1,y2)])
-        hex_poly = Polygon(self.getHexCoords())
-        return rect_poly.contains(hex_poly)
+        return rect_poly.contains(Point(self.getCenterCoordsInPx()))
 
     def createNeighbour(self, hexmap, location:str, hex_type, rect, replace_if_exists=False):
         if location in self.neighbours and not replace_if_exists:
@@ -193,7 +190,7 @@ class HexMap:
         self._appendHex(first_hex)
         horizon=deque([first_hex])
         horizon_next=deque()
-        hex_count_mock=300
+        hex_count_mock=2500
         hex_count=0
         while len(horizon)>0:
             for _hex in horizon:
@@ -203,20 +200,14 @@ class HexMap:
                     neighbour,_created=_hex.createNeighbour(self,direction,self._nextRandomHexType(),self.map_rect)
                     if not _created:
                         continue
-                    if not neighbour.isContainedInRectangle(self.map_rect):
-                        print("a",neighbour)
-                        continue
                     horizon_next.append(neighbour)
                     hex_count+=1
                     if hex_count>hex_count_mock:
                         print("hex map overflow: ",hex_count)
                         return
-                for x in horizon_next:
-                    print(x,end=" ")
-                print()
             horizon=horizon_next
             horizon_next=deque()
-        print(first_hex.neighbours)
+        print("rendered")
 
     def getHexByCoordinates(self, coordinates):
         coordinates=Hex.transform(coordinates)
