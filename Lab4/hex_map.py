@@ -6,7 +6,6 @@ from math import sqrt
 import pickle
 import os
 import threading
-from time import sleep
 
 class Cache:
     cache_dir="./cache"
@@ -41,7 +40,7 @@ class Hex:
         "lu": "rd", "rd": "lu",
         "ld": "ru", "ru": "ld"
     }
-    hex_width=8 #px
+    hex_width=10 #px
     scale=1
 
     def __init__(self, hex_type, coordinates, neighbours=None):
@@ -74,6 +73,7 @@ class Hex:
 
 
     def draw(self,surface:pygame.Surface):
+        color="black"
         self.offset=[surface.get_width()//2,surface.get_height()//2]
         hex_coords=self.getHexCoords()
         center=self.getCenterCoordsInPx()
@@ -87,8 +87,7 @@ class Hex:
         for i in range(len(hex_coords)):
             p1=hex_coords[i]
             p2=hex_coords[(i+1)%len(hex_coords)]
-            pygame.draw.line(surface,color="black",start_pos=p1,end_pos=p2)
-        #pygame.draw.circle(surface,center=center,radius=Hex.hex_width//2,color="red")
+            pygame.draw.line(surface,color,start_pos=p1,end_pos=p2)
         for _x in self.neigh_directions:
             if not _x in self.neighbours:
                 continue
@@ -107,6 +106,13 @@ class Hex:
         if not scale:
             return c
         return int(c[0]*Hex.scale),int(c[1]*Hex.scale)
+
+    @staticmethod
+    def getHexCoordsByCenterCoords(center):
+        x,y=center
+        coords = 0, 2/sqrt(3)*x+2*y/3, 2/sqrt(3)*x-2*y/3
+        coords=tuple(a//(2*Hex.hex_width) for a in coords)
+        return coords
 
     def getHexCoords(self):
         x, y = self.getCenterCoordsInPx()
@@ -246,7 +252,9 @@ class HexMap:
         self.hex_dict.clear()
 
     def _fillMapRectangleWithHexes(self):
-        first_hex=Hex(hex_type="plains",coordinates=(0,0,0))
+        p=self.map_poly.centroid
+        first_coords=Hex.getHexCoordsByCenterCoords((p.x,p.y))
+        first_hex=Hex(hex_type="desert",coordinates=first_coords)
         self._appendHex(first_hex)
         horizon=deque([first_hex])
         horizon_next=deque()
@@ -267,20 +275,15 @@ class HexMap:
                         return
             horizon=horizon_next
             horizon_next=deque()
-        print("rendered")
 
     def getHexByCoordinates(self, coordinates):
         return self.hex_dict[coordinates]
 
+
 if __name__ == '__main__':
-    hm=HexMap((100,100))
+    c=Hex.getHexCoordsByCenterCoords((0,100))
 
-    #h1=Hex("plains",(-16,31,30))
-    h1=Hex("plains",(0,1,30))
+    h=Hex(coordinates=c,hex_type="plains")
 
-    p=h1.isContainedInPolygon([
-        -450,-300,450,300
-    ])
-    print(p)
-    print(h1.getCenterCoordsInPx())
-    print(h1.getHexCoords())
+    print(c)
+    print(h.getCenterCoordsInPx())

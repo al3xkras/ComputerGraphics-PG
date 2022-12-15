@@ -44,7 +44,9 @@ class ProjectHexMap:
 
     def setup(self):
         self.screen=self._pygame_screen_setup()
-        #self._setup_hotkeys()
+        hotkey_thread = threading.Thread(target=self._setup_hotkeys)
+        hotkey_thread.daemon = True
+        hotkey_thread.start()
 
     def exit(self):
         pygame.display.quit()
@@ -78,15 +80,15 @@ class ProjectHexMap:
     def mainloop(self):
         self.setup()
         polygons = [
+            Polygon([(-200, 300), (300, -200), (200, 300), (300, 200)]),
             Polygon([(-200, -200), (200, -200), (0, 50)]),
             Polygon([(-200, 200), (0, -100), (100, 200)]),
             Polygon([(-200, -200), (100, -100), (0, 100)]),
-            Polygon([(-200, 0), (0, -200), (200, 0), (0, 200)]),
+            Polygon([(-100, 400), (400, -100), (300, 400), (400, 300)]),
         ]
         hm = HexMap(ProjectHexMap.WINDOW_SIZE,map_poly=polygons[0])
-        #hexmap=HexMap(ProjectHexMap.WINDOW_SIZE)
         clock = pygame.time.Clock()
-        i=0
+        i=1
         j=0
 
         while self.draw:
@@ -97,10 +99,9 @@ class ProjectHexMap:
             self.screen.fill((0xff, 0xff, 0xff))
             hm.draw(self.screen)
             pygame.display.flip()
-            i=(i+1)%2
+            i=(i+1)%10
             if i==1:
                 j=(j+1)%len(polygons)
-                print(j)
                 hm.map_poly=polygons[j]
                 hm.clear()
         self.latch.count_down()
