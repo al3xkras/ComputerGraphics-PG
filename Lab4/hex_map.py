@@ -2,10 +2,11 @@ from collections import deque
 
 import pygame
 from shapely.geometry import Polygon,Point
-import sympy as sp
+from math import sqrt
 import pickle
 import os
 import threading
+from time import sleep
 
 class Cache:
     cache_dir="./cache"
@@ -41,9 +42,6 @@ class Hex:
         "ld": "ru", "ru": "ld"
     }
     hex_width=15 #px
-    i,j,k=sp.symbols("i,j,k")
-    center_coordinates_eq = (i * sp.sqrt(3) + j * sp.sqrt(3) / 4 + k * sp.sqrt(3) / 4,
-                             j * 3 / 4 - k * 3 / 4)
     scale=1
 
     def __init__(self, hex_type, coordinates, neighbours=None):
@@ -104,32 +102,35 @@ class Hex:
 
     def getCenterCoordsInPx(self, scale=False):
         w=self.hex_width*2
-        c = tuple(x.subs(Hex.i,self.coordinates[0]*w).subs(Hex.j,self.coordinates[1]*w).subs(Hex.k,self.coordinates[2]*w).evalf()
-                for x in Hex.center_coordinates_eq)
+        i,j,k=(x*w for x in self.coordinates)
+
+        c = (i * sqrt(3) + j * sqrt(3) / 4 + k * sqrt(3) / 4,
+                             j * 3 / 4 - k * 3 / 4)
         if not scale:
             return c
         return int(c[0]*Hex.scale),int(c[1]*Hex.scale)
 
     def getHexCoords(self):
         x, y = self.getCenterCoordsInPx()
-        h1x = x - Hex.i * sp.sqrt(3) / 2
-        h1y = y - Hex.i / 2
-        h2x = x - Hex.i * sp.sqrt(3) / 2
-        h2y = y + Hex.i / 2
+        i=self.hex_width
+        h1x = x - i * sqrt(3) / 2
+        h1y = y - i / 2
+        h2x = x - i * sqrt(3) / 2
+        h2y = y + i / 2
         h3x = x
-        h3y = y - Hex.i
+        h3y = y - i
         h4x = x
-        h4y = y + Hex.i
-        h5x = x + Hex.i * sp.sqrt(3) / 2
-        h5y = y - Hex.i / 2
-        h6x = x + Hex.i * sp.sqrt(3) / 2
-        h6y = y + Hex.i / 2
+        h4y = y + i
+        h5x = x + i * sqrt(3) / 2
+        h5y = y - i / 2
+        h6x = x + i * sqrt(3) / 2
+        h6y = y + i / 2
         hex_coords = [
             (h1x, h1y), (h2x, h2y),
             (h4x, h4y), (h6x, h6y),
             (h5x, h5y), (h3x, h3y),
         ]
-        hex_coords = [list(int(_x.subs(Hex.i, self.hex_width)*Hex.scale) for _x in _x2) for _x2 in hex_coords]
+        hex_coords = [list(int(_x*Hex.scale) for _x in _x2) for _x2 in hex_coords]
 
         return hex_coords
 
@@ -197,7 +198,8 @@ class HexMap:
             self._cached_surface=pygame.Surface((surface.get_width(),surface.get_height()))
             self._cached_surface.fill((0xff, 0xff, 0xff))
             lst=list(self.hex_dict.values())
-            def _f(a,b):
+            def _f(a, b, _j):
+                sleep(0.1 * _j)
                 for i in range(a,b):
                     x=lst[i]
                     x.draw(self._cached_surface)
@@ -206,7 +208,7 @@ class HexMap:
             _a=0
             _b=_k
             for j in range(thr_count):
-                thr=threading.Thread(target=_f,args=(_a,_b),daemon=True)
+                thr=threading.Thread(target=_f,args=(_a,_b,j+1),daemon=True)
                 thr.start()
                 _a+=_k
                 _b+=_k
