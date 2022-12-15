@@ -3,6 +3,31 @@ from collections import deque
 import pygame
 from shapely.geometry import Polygon,Point
 import sympy as sp
+import pickle
+import os
+import threading
+
+class Cache:
+    cache_dir="./cache"
+    postfix=".bin"
+    @staticmethod
+    def load_obj(key):
+        f=open(Cache.cache_dir+key+Cache.postfix,"w+")
+        obj=None
+        try:
+            obj = pickle.load(f)
+            f.close()
+        except:
+            f.close()
+        return obj
+    @staticmethod
+    def save_obj(key,obj):
+        f=open(Cache.cache_dir+key+Cache.postfix,"w+")
+        pickle.dump(file=f,obj=obj)
+        f.close()
+    @staticmethod
+    def clear(key):
+        os.remove(Cache.cache_dir+key+Cache.postfix)
 
 class Hex:
     neigh_directions={
@@ -42,9 +67,9 @@ class Hex:
     def draw_arrow(surface,_from,_to,color):
         pygame.draw.line(surface,color,_from,_to)
         w=(_from[0]-_to[0])**2+(_from[1]-_to[1])**2
-        w=int(max(2,w**0.5/5))
+        w=int(w**0.5/5)
         d=(_to[0]-_from[0],_to[1]-_from[1])
-        d=[x*5/w for x in d]
+        d=[x*2/w for x in d]
         d_ort=[-d[1]/5,d[0]/5]
         pygame.draw.line(surface,color,(_to[0]-d[0]+d_ort[0],_to[1]-d[1]+d_ort[1]),_to)
         pygame.draw.line(surface,color,(_to[0]-d[0]-d_ort[0],_to[1]-d[1]-d_ort[1]),_to)
@@ -66,6 +91,7 @@ class Hex:
             p2=hex_coords[(i+1)%len(hex_coords)]
             pygame.draw.line(surface,color="black",start_pos=p1,end_pos=p2)
         #pygame.draw.circle(surface,center=center,radius=Hex.hex_width//2,color="red")
+        """
         for _x in self.neigh_directions:
             if not _x in self.neighbours:
                 continue
@@ -74,7 +100,7 @@ class Hex:
             c[0] += self.offset[0]
             c[1] += self.offset[1]
             #Hex.draw_arrow(surface,center,c,"green")
-
+"""
 
     def getCenterCoordsInPx(self, scale=False):
         w=self.hex_width*2
@@ -151,7 +177,7 @@ class HexMap:
         "hills": "hills.png",
         "desert": "desert.png"
     }
-
+    cache_surface_name="hexmap_hexes"
     def __init__(self, map_size):
         self._hex_list = None
         self.map_size=map_size
@@ -170,8 +196,20 @@ class HexMap:
         if self._cached_surface is None:
             self._cached_surface=pygame.Surface((surface.get_width(),surface.get_height()))
             self._cached_surface.fill((0xff, 0xff, 0xff))
-            for x in self.hex_dict.values():
-                x.draw(self._cached_surface)
+            lst=list(self.hex_dict.values())
+            def _f(a,b):
+                for i in range(a,b):
+                    x=lst[i]
+                    x.draw(self._cached_surface)
+            thr_count=6
+            _k=len(lst)//thr_count
+            _a=0
+            _b=_k
+            for j in range(thr_count):
+                thr=threading.Thread(target=_f,args=(_a,_b),daemon=True)
+                thr.start()
+                _a+=_k
+                _b+=_k
         pygame.draw.rect(surface,"black",self.map_rect)
 
     def draw(self,surface):

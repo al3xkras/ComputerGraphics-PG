@@ -43,6 +43,7 @@ class ProjectHexMap:
 
     def setup(self):
         self.screen=self._pygame_screen_setup()
+        #self._setup_hotkeys()
 
     def exit(self):
         pygame.display.quit()
@@ -58,6 +59,7 @@ class ProjectHexMap:
                 exit()
 
             if hasattr(key, 'name'):
+                print(key.name)
                 if key.name == "left":
                     pass
                 elif key.name == "right":
