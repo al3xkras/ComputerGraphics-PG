@@ -41,7 +41,7 @@ class Hex:
         "lu": "rd", "rd": "lu",
         "ld": "ru", "ru": "ld"
     }
-    hex_width=15 #px
+    hex_width=8 #px
     scale=1
 
     def __init__(self, hex_type, coordinates, neighbours=None):
@@ -89,7 +89,6 @@ class Hex:
             p2=hex_coords[(i+1)%len(hex_coords)]
             pygame.draw.line(surface,color="black",start_pos=p1,end_pos=p2)
         #pygame.draw.circle(surface,center=center,radius=Hex.hex_width//2,color="red")
-        """
         for _x in self.neigh_directions:
             if not _x in self.neighbours:
                 continue
@@ -98,7 +97,6 @@ class Hex:
             c[0] += self.offset[0]
             c[1] += self.offset[1]
             #Hex.draw_arrow(surface,center,c,"green")
-"""
 
     def getCenterCoordsInPx(self, scale=False):
         w=self.hex_width*2
@@ -137,6 +135,7 @@ class Hex:
     def isContainedInRectangle(self,rect):
         x1,y1,x2,y2=rect
         rect_poly = Polygon([(x1, y1), (x2, y1), (x2, y2),(x1,y2)])
+
         return rect_poly.contains(Point(self.getCenterCoordsInPx()))
 
     def createNeighbour(self, hexmap, location:str, hex_type, rect, replace_if_exists=False):
@@ -191,24 +190,35 @@ class HexMap:
             self.map_size[1]//2
         )
         self._cached_surface=None
+        self._op_threads=[]
+
+    def is_preparing(self):
+        if len(self._op_threads)==0:
+            return False
+        a=any([x.is_alive() for x in self._op_threads])
+        if not a:
+            self._op_threads=[]
+        return a
 
     def prepare(self,surface):
+        if self.is_preparing():
+            return
         self._fillMapRectangleWithHexes()
         if self._cached_surface is None:
             self._cached_surface=pygame.Surface((surface.get_width(),surface.get_height()))
             self._cached_surface.fill((0xff, 0xff, 0xff))
             lst=list(self.hex_dict.values())
-            def _f(a, b, _j):
-                sleep(0.1 * _j)
+            def _f(a, b):
                 for i in range(a,b):
                     x=lst[i]
                     x.draw(self._cached_surface)
-            thr_count=6
+            thr_count=1
             _k=len(lst)//thr_count
             _a=0
             _b=_k
             for j in range(thr_count):
-                thr=threading.Thread(target=_f,args=(_a,_b,j+1),daemon=True)
+                thr=threading.Thread(target=_f,args=(_a,_b),daemon=True)
+                self._op_threads.append(thr)
                 thr.start()
                 _a+=_k
                 _b+=_k
@@ -225,12 +235,17 @@ class HexMap:
     def _nextRandomHexType(self):
         return "plains"
 
+    def clear(self):
+        if self.is_preparing():
+            return
+        self._cached_surface=None
+
     def _fillMapRectangleWithHexes(self):
         first_hex=Hex(hex_type="plains",coordinates=(0,0,0))
         self._appendHex(first_hex)
         horizon=deque([first_hex])
         horizon_next=deque()
-        hex_count_mock=2500
+        hex_count_mock=-1
         hex_count=0
         while len(horizon)>0:
             for _hex in horizon:
@@ -242,7 +257,7 @@ class HexMap:
                         continue
                     horizon_next.append(neighbour)
                     hex_count+=1
-                    if hex_count>hex_count_mock:
+                    if hex_count_mock>0 and hex_count>hex_count_mock:
                         print("hex map overflow: ",hex_count)
                         return
             horizon=horizon_next

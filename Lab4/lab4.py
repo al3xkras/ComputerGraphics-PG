@@ -79,6 +79,7 @@ class ProjectHexMap:
         hm = HexMap(ProjectHexMap.WINDOW_SIZE)
         #hexmap=HexMap(ProjectHexMap.WINDOW_SIZE)
         clock = pygame.time.Clock()
+        i=0
         while self.draw:
             clock.tick(30)
             for event in pygame.event.get():
@@ -87,6 +88,10 @@ class ProjectHexMap:
             self.screen.fill((0xff, 0xff, 0xff))
             hm.draw(self.screen)
             pygame.display.flip()
+            i=(i+1)%40
+            if i==1:
+                #hm.clear()
+                pass
         self.latch.count_down()
 
 if __name__ == '__main__':
