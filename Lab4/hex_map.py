@@ -132,19 +132,17 @@ class Hex:
 
         return hex_coords
 
-    def isContainedInRectangle(self,rect):
-        x1,y1,x2,y2=rect
-        rect_poly = Polygon([(x1, y1), (x2, y1), (x2, y2),(x1,y2)])
-
-        return rect_poly.contains(Point(self.getCenterCoordsInPx()))
+    def isContainedInPolygon(self, poly):
+        return poly.contains(Point(self.getCenterCoordsInPx()))
 
     def createNeighbour(self, hexmap, location:str, hex_type, rect, replace_if_exists=False):
         if location in self.neighbours and not replace_if_exists:
             return self.neighbours[location], False
         coords = [x for x in self.coordinates]
         shift = Hex.neigh_directions[location]
-        coords[shift[0]]+=shift[1]
-        coords=tuple(x for x in coords)
+        h=Hex.transform(coords,True)
+        h[shift[0]]+=shift[1]
+        coords=tuple(h)
         self_loc_for_neigh=Hex.inverse_direction[location]
         _hex=None
         _created=True
@@ -153,7 +151,7 @@ class Hex:
             _created=False
         else:
             _hex=Hex(hex_type,coords,dict())
-            if not _hex.isContainedInRectangle(rect):
+            if not _hex.isContainedInPolygon(rect):
                 return None, False
             hexmap.hex_dict[coords]=_hex
         _hex.neighbours[self_loc_for_neigh]=self
@@ -161,11 +159,14 @@ class Hex:
         return _hex, _created
 
     @staticmethod
-    def transform(coordinates):
-        return (0,
+    def transform(coordinates,lst=False):
+        r=(0,
             coordinates[1]+coordinates[0],
             coordinates[2]+coordinates[0]
         )
+        if lst:
+            return list(r)
+        return r
 
 
 class HexMap:
@@ -178,17 +179,21 @@ class HexMap:
         "desert": "desert.png"
     }
     cache_surface_name="hexmap_hexes"
-    def __init__(self, map_size):
+    def __init__(self, map_size, map_poly=None):
         self._hex_list = None
         self.map_size=map_size
         self.zoom_factor=1.0
         self.hex_dict=dict()
-        self.map_rect=(
-            -self.map_size[0]//2,
-            -self.map_size[1]//2,
-            self.map_size[0]//2,
-            self.map_size[1]//2
-        )
+        if map_poly is None:
+            x1,y1,x2,y2=(
+                -self.map_size[0]//2,
+                -self.map_size[1]//2,
+                self.map_size[0]//2,
+                self.map_size[1]//2
+            )
+            self.map_poly=Polygon([(x1, y1), (x2, y1), (x2, y2),(x1,y2)])
+        else:
+            self.map_poly=map_poly
         self._cached_surface=None
         self._op_threads=[]
 
@@ -222,7 +227,6 @@ class HexMap:
                 thr.start()
                 _a+=_k
                 _b+=_k
-        pygame.draw.rect(surface,"black",self.map_rect)
 
     def draw(self,surface):
         if self._cached_surface is None:
@@ -239,6 +243,7 @@ class HexMap:
         if self.is_preparing():
             return
         self._cached_surface=None
+        self.hex_dict.clear()
 
     def _fillMapRectangleWithHexes(self):
         first_hex=Hex(hex_type="plains",coordinates=(0,0,0))
@@ -249,10 +254,10 @@ class HexMap:
         hex_count=0
         while len(horizon)>0:
             for _hex in horizon:
-                if not _hex.isContainedInRectangle(self.map_rect):
+                if not _hex.isContainedInPolygon(self.map_poly):
                     continue
                 for direction in Hex.neigh_directions:
-                    neighbour,_created=_hex.createNeighbour(self,direction,self._nextRandomHexType(),self.map_rect)
+                    neighbour,_created=_hex.createNeighbour(self, direction, self._nextRandomHexType(), self.map_poly)
                     if not _created:
                         continue
                     horizon_next.append(neighbour)
@@ -265,7 +270,6 @@ class HexMap:
         print("rendered")
 
     def getHexByCoordinates(self, coordinates):
-        coordinates=Hex.transform(coordinates)
         return self.hex_dict[coordinates]
 
 if __name__ == '__main__':
@@ -274,7 +278,7 @@ if __name__ == '__main__':
     #h1=Hex("plains",(-16,31,30))
     h1=Hex("plains",(0,1,30))
 
-    p=h1.isContainedInRectangle([
+    p=h1.isContainedInPolygon([
         -450,-300,450,300
     ])
     print(p)

@@ -4,6 +4,7 @@ import os
 import threading
 from hex_map import HexMap,Hex
 from pynput import keyboard
+from shapely.geometry import Polygon
 
 class CountDownLatch(object):
     def __init__(self, count=1):
@@ -76,10 +77,18 @@ class ProjectHexMap:
 
     def mainloop(self):
         self.setup()
-        hm = HexMap(ProjectHexMap.WINDOW_SIZE)
+        polygons = [
+            Polygon([(-200, -200), (200, -200), (0, 50)]),
+            Polygon([(-200, 200), (0, -100), (100, 200)]),
+            Polygon([(-200, -200), (100, -100), (0, 100)]),
+            Polygon([(-200, 0), (0, -200), (200, 0), (0, 200)]),
+        ]
+        hm = HexMap(ProjectHexMap.WINDOW_SIZE,map_poly=polygons[0])
         #hexmap=HexMap(ProjectHexMap.WINDOW_SIZE)
         clock = pygame.time.Clock()
         i=0
+        j=0
+
         while self.draw:
             clock.tick(30)
             for event in pygame.event.get():
@@ -88,10 +97,12 @@ class ProjectHexMap:
             self.screen.fill((0xff, 0xff, 0xff))
             hm.draw(self.screen)
             pygame.display.flip()
-            i=(i+1)%40
+            i=(i+1)%2
             if i==1:
-                #hm.clear()
-                pass
+                j=(j+1)%len(polygons)
+                print(j)
+                hm.map_poly=polygons[j]
+                hm.clear()
         self.latch.count_down()
 
 if __name__ == '__main__':
