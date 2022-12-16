@@ -40,7 +40,7 @@ class Hex:
         "lu": "rd", "rd": "lu",
         "ld": "ru", "ru": "ld"
     }
-    hex_width=5 #px
+    hex_width=8 #px
     scale=1
 
     def __init__(self, hex_type, coordinates):
@@ -56,6 +56,7 @@ class Hex:
         #self.neighbours=neighbours
         self.hex_width=Hex.hex_width
         self.offset=[0,0]
+        self.hide=False
 
     def __str__(self) -> str:
         return "Hex("+self.hex_type+" "+str(self.coordinates)+")"
@@ -73,6 +74,8 @@ class Hex:
 
 
     def draw(self,surface:pygame.Surface):
+        if self.hide:
+            return
         color="black"
         self.offset=[surface.get_width()//2,surface.get_height()//2]
         hex_coords=self.getHexCoords()
@@ -140,7 +143,10 @@ class Hex:
         return hex_coords
 
     def isContainedInPolygon(self, poly):
+        if hasattr(poly,"can_draw_hex_at"):
+            self.hide=not poly.can_draw_hex_at(Point(self.getCenterCoordsInPx()))
         return poly.contains(Point(self.getCenterCoordsInPx()))
+
 
     def createNeighbour(self, hexmap, location:str, hex_type, rect, replace_if_exists=False):
         #if location in self.neighbours and not replace_if_exists:
@@ -223,6 +229,7 @@ class HexMap:
             def _f(a, b):
                 for i in range(a,b):
                     x=lst[i]
+                    x.isContainedInPolygon(self.map_poly)
                     x.draw(self._cached_surface)
             thr_count=1
             _k=len(lst)//thr_count
@@ -250,16 +257,21 @@ class HexMap:
         if self.is_preparing():
             return
         self._cached_surface=None
-        self.hex_dict.clear()
+        #self.hex_dict.clear()
 
     def _fillMapRectangleWithHexes(self):
-        p=self.map_poly.centroid
+        if len(self.hex_dict)>0:
+            return
+        if hasattr(self.map_poly,"centroid"):
+            p=self.map_poly.centroid
+        else:
+            p=Point(0,0)
         first_coords=Hex.getHexCoordsByCenterCoords((p.x,p.y))
         first_hex=Hex(hex_type="desert",coordinates=first_coords)
         self._appendHex(first_hex)
         horizon=deque([first_hex])
         horizon_next=deque()
-        hex_count_mock=-1
+        hex_count_mock=10000
         hex_count=0
         while len(horizon)>0:
             for _hex in horizon:

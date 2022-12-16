@@ -5,6 +5,7 @@ import threading
 from hex_map import HexMap,Hex
 from pynput import keyboard
 from shapely.geometry import Polygon
+from test.im_to_poly import FrameIterator,ImagePolygon
 
 class CountDownLatch(object):
     def __init__(self, count=1):
@@ -79,17 +80,23 @@ class ProjectHexMap:
 
     def mainloop(self):
         self.setup()
-        polygons = [
-            Polygon([(-200, 300), (300, -200), (200, 300), (300, 200),(100,50)]),
-            Polygon([(-200, -200), (200, -200), (0, 50)]),
-            Polygon([(-200, 200), (0, -100), (100, 200)]),
-            Polygon([(-200, -200), (100, -100), (0, 100)]),
-            Polygon([(-100, 400), (400, -100), (300, 400), (400, 300)]),
-        ]
+        fr=FrameIterator("../test/test.mp4")
         hm = HexMap(ProjectHexMap.WINDOW_SIZE)
+        rect=hm.map_poly
         clock = pygame.time.Clock()
-        i=1
-        j=0
+        fps=pygame.time.Clock()
+
+        im=None
+        lock=threading.Lock()
+        def draw_map():
+            nonlocal im
+            while self.draw:
+                fps.tick(30)
+                if not lock.locked():
+                    im = fr.__next__()
+
+        t=threading.Thread(target=draw_map,daemon=True)
+        t.start()
 
         while self.draw:
             clock.tick(30)
@@ -99,9 +106,18 @@ class ProjectHexMap:
             self.screen.fill((0xff, 0xff, 0xff))
             hm.draw(self.screen)
             pygame.display.flip()
-            if i==1:
-                j=(j+1)%len(polygons)
-                hm.map_poly=polygons[j]
+
+            lock.acquire()
+            image=im
+            lock.release()
+
+            if not hm.is_preparing():
+                try:
+                    map_poly = ImagePolygon(image, 10, rect)
+                except StopIteration:
+                    map_poly = Polygon([(-100, 400), (400, -100), (300, 400), (400, 300)])
+
+                hm.map_poly = map_poly
                 hm.clear()
         self.latch.count_down()
 
