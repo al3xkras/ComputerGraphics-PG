@@ -1,6 +1,6 @@
 /tmp
 **/__pycache__
-
+**/test**.txt
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar

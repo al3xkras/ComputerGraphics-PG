@@ -86,22 +86,41 @@ class TestCases:
         _points += _rep
         return _points
 
-    def test_giftwrap_algorithm_correctness(self,points):
+    def test_giftwrap_algorithm_correctness(self, points, writer:TestOutputWriter, section="test", info=""):
         #If algo is correct:
         #The convex hull contains all points
         #Convex hull of a convex polygon is equal to the polygon
 
-        actual=find_convex_hull_giftwrap(points)
-        actual1=find_convex_hull_giftwrap(actual)
+        _actual=list(find_convex_hull_giftwrap(points))
+        _actual1=list(find_convex_hull_giftwrap(_actual))
         try:
-            actual=Polygon([shapely.geometry.Point(p.x,p.y) for p in actual])
-            actual1=Polygon([shapely.geometry.Point(p.x,p.y) for p in actual1])
+            actual=Polygon([shapely.geometry.Point(p.x,p.y) for p in _actual])
+            actual1=Polygon([shapely.geometry.Point(p.x,p.y) for p in _actual1])
         except:
             return None,False
         print("actual",actual)
         print("convex hull of 'actual'",actual1)
         print("'actual' = convex hull of 'actual':",actual==actual1)
         buffer=self.buffer
+        s_name_input=section+" input data"
+        s_name_actual = section + " CH"
+        s_name_actual1 = section + " CH of the output CH"
+
+        writer.add_section(section)
+        writer.set_section_info(section,info)
+        writer.add_section(s_name_input)
+        for p in points:
+            writer.add_section_value(s_name_input,p)
+        writer.set_section_info(s_name_input,"Input points")
+        writer.add_section(s_name_actual)
+        writer.add_section(s_name_actual1)
+        for i in range(len(_actual)):
+            val=_actual[i]
+            writer.add_section_value(s_name_actual,val)
+        for i in range(len(_actual1)):
+            val1=_actual1[i]
+            writer.add_section_value(s_name_actual1,val1)
+            writer.set_section_info(s_name_actual1,"must be equal to '%s' for non-linear cases"%s_name_actual)
 
         res=False
         try:
@@ -111,15 +130,19 @@ class TestCases:
 
 
 if __name__ == '__main__':
+    writer=TestOutputWriter()
     for i in range(10):
-        print("Test %d"%(i+1))
+        section="Test %d "%(i+1)
+        print(section)
         t=TestCases()
         t1=t.generate_linear(10)
         t2=t.generate_normal(100)
         t3=t.generate_linear_with_repeating_points(20)
         t4=t.generate_with_repeating_points(5)
-        print("linear",t.test_giftwrap_algorithm_correctness(t1))
-        print("normal",t.test_giftwrap_algorithm_correctness(t2))
-        print("linear with repeating points",t.test_giftwrap_algorithm_correctness(t3))
-        print("repeating points",t.test_giftwrap_algorithm_correctness(t4))
+        info=["linear","normal","linear with repeating points","repeating points"]
+        print(info[0],t.test_giftwrap_algorithm_correctness(t1,writer,section=section+info[0],info=info[0]))
+        print(info[1],t.test_giftwrap_algorithm_correctness(t2,writer,section=section+info[1],info=info[1]))
+        print(info[2],t.test_giftwrap_algorithm_correctness(t3,writer,section=section+info[2],info=info[2]))
+        print(info[3],t.test_giftwrap_algorithm_correctness(t4,writer,section=section+info[3],info=info[3]))
         print()
+    writer.print_to_file("./test_out.txt")

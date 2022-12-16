@@ -79,7 +79,8 @@ class TestOutputWriter:
             print()"""
 
     def add_section(self,section_name):
-        assert not section_name in self.sections
+        if section_name in self.sections:
+            return
         self.sections[section_name]={
             self.title:section_name,
             self.values:[]
