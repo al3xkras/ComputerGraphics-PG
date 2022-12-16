@@ -40,9 +40,9 @@ class Hex:
         "lu": "rd", "rd": "lu",
         "ld": "ru", "ru": "ld"
     }
-    hex_width=8 #px
+    hex_width=18 #px
     scale=1
-
+    color=(0xcc, 0xcc, 0xcc)
     def __init__(self, hex_type, coordinates):
         #if neighbours is None:
             #neighbours = dict()
@@ -53,6 +53,7 @@ class Hex:
             coordinates[2]+coordinates[0]
         )
         self.hex_type=hex_type
+        self.scale=Hex.scale
         #self.neighbours=neighbours
         self.hex_width=Hex.hex_width
         self.offset=[0,0]
@@ -76,7 +77,7 @@ class Hex:
     def draw(self,surface:pygame.Surface):
         if self.hide:
             return
-        color="black"
+        color="white"
         self.offset=[surface.get_width()//2,surface.get_height()//2]
         hex_coords=self.getHexCoords()
         center=self.getCenterCoordsInPx()
@@ -91,6 +92,7 @@ class Hex:
             p1=hex_coords[i]
             p2=hex_coords[(i+1)%len(hex_coords)]
             pygame.draw.line(surface,color,start_pos=p1,end_pos=p2)
+        #pygame.draw.circle(surface,color="black",center=center,radius=self.hex_width/5)
         """
         for _x in self.neigh_directions:
             if not _x in self.neighbours:
@@ -102,25 +104,27 @@ class Hex:
             #Hex.draw_arrow(surface,center,c,"green")"""
 
     def getCenterCoordsInPx(self, scale=False):
-        w=self.hex_width*2
+        w=self.hex_width*self.scale*2
         i,j,k=(x*w for x in self.coordinates)
 
         c = (i * sqrt(3) + j * sqrt(3) / 4 + k * sqrt(3) / 4,
                              j * 3 / 4 - k * 3 / 4)
         if not scale:
             return c
-        return int(c[0]*Hex.scale),int(c[1]*Hex.scale)
+        return int(c[0]),int(c[1])
 
     @staticmethod
-    def getHexCoordsByCenterCoords(center):
+    def getHexCoordsByCenterCoords(center,width=None,scale=1):
         x,y=center
+        if width is None:
+            width=Hex.hex_width
         coords = 0, 2/sqrt(3)*x+2*y/3, 2/sqrt(3)*x-2*y/3
-        coords=tuple(a//(2*Hex.hex_width) for a in coords)
+        coords=tuple(a//(2*width*scale) for a in coords)
         return coords
 
     def getHexCoords(self):
         x, y = self.getCenterCoordsInPx()
-        i=self.hex_width
+        i=self.hex_width*self.scale
         h1x = x - i * sqrt(3) / 2
         h1y = y - i / 2
         h2x = x - i * sqrt(3) / 2
@@ -138,15 +142,14 @@ class Hex:
             (h4x, h4y), (h6x, h6y),
             (h5x, h5y), (h3x, h3y),
         ]
-        hex_coords = [list(int(_x*Hex.scale) for _x in _x2) for _x2 in hex_coords]
+        hex_coords = [list(int(_x) for _x in _x2) for _x2 in hex_coords]
 
         return hex_coords
 
     def isContainedInPolygon(self, poly):
         if hasattr(poly,"can_draw_hex_at"):
-            self.hide=not poly.can_draw_hex_at(Point(self.getCenterCoordsInPx()))
+            self.hide=poly.can_draw_hex_at(Point(self.getCenterCoordsInPx()))
         return poly.contains(Point(self.getCenterCoordsInPx()))
-
 
     def createNeighbour(self, hexmap, location:str, hex_type, rect, replace_if_exists=False):
         #if location in self.neighbours and not replace_if_exists:
@@ -224,7 +227,7 @@ class HexMap:
         self._fillMapRectangleWithHexes()
         if self._cached_surface is None:
             self._cached_surface=pygame.Surface((surface.get_width(),surface.get_height()))
-            self._cached_surface.fill((0xff, 0xff, 0xff))
+            self._cached_surface.fill(Hex.color)
             lst=list(self.hex_dict.values())
             def _f(a, b):
                 for i in range(a,b):
@@ -257,7 +260,14 @@ class HexMap:
         if self.is_preparing():
             return
         self._cached_surface=None
-        #self.hex_dict.clear()
+        self.hex_dict.clear()
+
+    def zoom_in(self,delta):
+        self.zoom_factor=max(0.05,self.zoom_factor+delta)
+        self.clear()
+
+    def zoom_out(self,delta):
+        self.zoom_in(-delta)
 
     def _fillMapRectangleWithHexes(self):
         if len(self.hex_dict)>0:
@@ -268,10 +278,11 @@ class HexMap:
             p=Point(0,0)
         first_coords=Hex.getHexCoordsByCenterCoords((p.x,p.y))
         first_hex=Hex(hex_type="desert",coordinates=first_coords)
+        first_hex.scale=self.zoom_factor
         self._appendHex(first_hex)
         horizon=deque([first_hex])
         horizon_next=deque()
-        hex_count_mock=10000
+        hex_count_mock=3000
         hex_count=0
         while len(horizon)>0:
             for _hex in horizon:
@@ -281,6 +292,7 @@ class HexMap:
                     neighbour,_created=_hex.createNeighbour(self, direction, self._nextRandomHexType(), self.map_poly)
                     if not _created:
                         continue
+                    neighbour.scale=self.zoom_factor
                     horizon_next.append(neighbour)
                     hex_count+=1
                     if hex_count_mock>0 and hex_count>hex_count_mock:

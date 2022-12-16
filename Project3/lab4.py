@@ -37,16 +37,17 @@ class ProjectHexMap:
         self.draw=True
         self.latch=CountDownLatch(1)
         self.screen=None
+        self.hexmap=None
 
-    def _pygame_screen_setup(self):
+    @staticmethod
+    def _pygame_screen_setup():
         pygame.init()
         os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % ProjectHexMap.WINDOW_POSITION
         return pygame.display.set_mode(ProjectHexMap.WINDOW_SIZE, ProjectHexMap.FLAGS)
 
     def setup(self):
         self.screen=self._pygame_screen_setup()
-        hotkey_thread = threading.Thread(target=self._setup_hotkeys)
-        hotkey_thread.daemon = True
+        hotkey_thread = threading.Thread(target=self._setup_hotkeys,daemon=True)
         hotkey_thread.start()
 
     def exit(self):
@@ -57,13 +58,21 @@ class ProjectHexMap:
     def _setup_hotkeys(self):
         def on_press(key):
 
-            if hasattr(key, 'vk') and key.vk == 81:
-                self.draw = False
-                self.latch.await_countdown()
-                exit()
+            if hasattr(key, 'vk'):
+                vk=key.vk
+                if vk==81:
+                    self.draw = False
+                    self.latch.await_countdown()
+                    exit()
+
+                print(vk)
+
+                if vk == 107:
+                    self.hexmap.zoom_in(0.1)
+                elif vk == 109:
+                    self.hexmap.zoom_out(0.1)
 
             if hasattr(key, 'name'):
-                print(key.name)
                 if key.name == "left":
                     pass
                 elif key.name == "right":
@@ -75,13 +84,16 @@ class ProjectHexMap:
                 elif key.name == "q" or key.name == "Q":
                     pass
 
+
+
         with keyboard.Listener(on_press=on_press) as l:
             l.join()
 
     def mainloop(self):
         self.setup()
         fr=FrameIterator("../test/test.mp4")
-        hm = HexMap(ProjectHexMap.WINDOW_SIZE)
+        self.hexmap=HexMap(ProjectHexMap.WINDOW_SIZE)
+        hm = self.hexmap
         rect=hm.map_poly
         clock = pygame.time.Clock()
         fps=pygame.time.Clock()
@@ -96,20 +108,23 @@ class ProjectHexMap:
                     im = fr.__next__()
 
         t=threading.Thread(target=draw_map,daemon=True)
-        t.start()
+        #t.start()
 
         while self.draw:
-            clock.tick(30)
+            clock.tick(60)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.exit()
-            self.screen.fill((0xff, 0xff, 0xff))
+            self.screen.fill((0x00, 0x00, 0x00))
             hm.draw(self.screen)
             pygame.display.flip()
 
             lock.acquire()
             image=im
             lock.release()
+
+            if im is None:
+                continue
 
             if not hm.is_preparing():
                 try:
