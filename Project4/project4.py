@@ -2,12 +2,10 @@ from geometry_lib.io_operations import parse_file,TestOutputWriter
 from geometry_lib.data_representation import Point,Side,Segment,WhichSide,Color
 from collections import deque
 from random import randint,random
-from math import sqrt,ceil
-from numpy import array
-from shapely.geometry import MultiPoint,Polygon
+from shapely.geometry import Polygon
 import shapely
 
-def find_convex_hull_giftwrap(point_lst, sort=True):
+def _find_convex_hull_giftwrap(point_lst, sort=True):
     if sort:
         point_lst=sorted(point_lst, key=lambda p: p.x)
     left=deque()
@@ -29,10 +27,14 @@ def find_convex_hull_giftwrap(point_lst, sort=True):
             deq.append(p)
     find_convex_side(left,point_lst,Side.LEFT)
     find_convex_side(right,point_lst,Side.RIGHT)
-    right.popleft()
+    right.pop()
+    left.pop()
     for x in right:
         left.append(x)
     return left
+
+def find_convex_hull_giftwrap(point_lst, sort=True):
+    return _find_convex_hull_giftwrap(_find_convex_hull_giftwrap(_find_convex_hull_giftwrap(point_lst,sort),sort),sort)
 
 
 class TestCases:
@@ -87,13 +89,24 @@ class TestCases:
     def test_giftwrap_algorithm_correctness(self,points):
         #If algo is correct:
         #The convex hull contains all points
+        #Convex hull of a convex polygon is equal to the polygon
+
         actual=find_convex_hull_giftwrap(points)
+        actual1=find_convex_hull_giftwrap(actual)
         try:
             actual=Polygon([shapely.geometry.Point(p.x,p.y) for p in actual])
+            actual1=Polygon([shapely.geometry.Point(p.x,p.y) for p in actual1])
         except:
             return None,False
+        print("actual",actual)
+        print("convex hull of 'actual'",actual1)
+        print("'actual' = convex hull of 'actual':",actual==actual1)
         buffer=self.buffer
-        res=all([actual.buffer(buffer).contains(shapely.geometry.Point(p.x,p.y)) for p in points])
+
+        res=False
+        try:
+            res=all([actual.buffer(buffer).contains(shapely.geometry.Point(p.x,p.y)) for p in points])
+        except: pass
         return actual,res
 
 
