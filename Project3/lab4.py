@@ -80,13 +80,13 @@ class ProjectHexMap:
     def mainloop(self):
         self.setup()
         polygons = [
-            Polygon([(-200, 300), (300, -200), (200, 300), (300, 200)]),
+            Polygon([(-200, 300), (300, -200), (200, 300), (300, 200),(100,50)]),
             Polygon([(-200, -200), (200, -200), (0, 50)]),
             Polygon([(-200, 200), (0, -100), (100, 200)]),
             Polygon([(-200, -200), (100, -100), (0, 100)]),
             Polygon([(-100, 400), (400, -100), (300, 400), (400, 300)]),
         ]
-        hm = HexMap(ProjectHexMap.WINDOW_SIZE,map_poly=polygons[0])
+        hm = HexMap(ProjectHexMap.WINDOW_SIZE)
         clock = pygame.time.Clock()
         i=1
         j=0
@@ -99,7 +99,6 @@ class ProjectHexMap:
             self.screen.fill((0xff, 0xff, 0xff))
             hm.draw(self.screen)
             pygame.display.flip()
-            i=(i+1)%10
             if i==1:
                 j=(j+1)%len(polygons)
                 hm.map_poly=polygons[j]

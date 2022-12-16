@@ -40,12 +40,12 @@ class Hex:
         "lu": "rd", "rd": "lu",
         "ld": "ru", "ru": "ld"
     }
-    hex_width=10 #px
+    hex_width=5 #px
     scale=1
 
-    def __init__(self, hex_type, coordinates, neighbours=None):
-        if neighbours is None:
-            neighbours = dict()
+    def __init__(self, hex_type, coordinates):
+        #if neighbours is None:
+            #neighbours = dict()
         assert hex_type in HexMap.hex_types
 
         self.coordinates=(0,
@@ -53,7 +53,7 @@ class Hex:
             coordinates[2]+coordinates[0]
         )
         self.hex_type=hex_type
-        self.neighbours=neighbours
+        #self.neighbours=neighbours
         self.hex_width=Hex.hex_width
         self.offset=[0,0]
 
@@ -88,6 +88,7 @@ class Hex:
             p1=hex_coords[i]
             p2=hex_coords[(i+1)%len(hex_coords)]
             pygame.draw.line(surface,color,start_pos=p1,end_pos=p2)
+        """
         for _x in self.neigh_directions:
             if not _x in self.neighbours:
                 continue
@@ -95,7 +96,7 @@ class Hex:
             c=[int(_) for _ in x.getCenterCoordsInPx()]
             c[0] += self.offset[0]
             c[1] += self.offset[1]
-            #Hex.draw_arrow(surface,center,c,"green")
+            #Hex.draw_arrow(surface,center,c,"green")"""
 
     def getCenterCoordsInPx(self, scale=False):
         w=self.hex_width*2
@@ -142,26 +143,26 @@ class Hex:
         return poly.contains(Point(self.getCenterCoordsInPx()))
 
     def createNeighbour(self, hexmap, location:str, hex_type, rect, replace_if_exists=False):
-        if location in self.neighbours and not replace_if_exists:
-            return self.neighbours[location], False
+        #if location in self.neighbours and not replace_if_exists:
+        #    return self.neighbours[location], False
         coords = [x for x in self.coordinates]
         shift = Hex.neigh_directions[location]
         h=Hex.transform(coords,True)
         h[shift[0]]+=shift[1]
         coords=tuple(h)
-        self_loc_for_neigh=Hex.inverse_direction[location]
+        #self_loc_for_neigh=Hex.inverse_direction[location]
         _hex=None
         _created=True
         if coords in hexmap.hex_dict:
             _hex=hexmap.getHexByCoordinates(coords)
             _created=False
         else:
-            _hex=Hex(hex_type,coords,dict())
+            _hex=Hex(hex_type,coords)
             if not _hex.isContainedInPolygon(rect):
                 return None, False
             hexmap.hex_dict[coords]=_hex
-        _hex.neighbours[self_loc_for_neigh]=self
-        self.neighbours[location]=_hex
+        #_hex.neighbours[self_loc_for_neigh]=self
+        #self.neighbours[location]=_hex
         return _hex, _created
 
     @staticmethod
