@@ -36,15 +36,15 @@ def find_convex_hull_giftwrap(point_lst, sort=True):
 
 
 class TestCases:
-    def generate(self):
-        pass
+    def __init__(self):
+        self.rmin,self.rmax=-10000,10000
+        self.buffer=1 # error = 1/20000 ~= 0.00005
 
     def generate_linear(self,maxpoints):
         #All points form a line
-        scale=random()*maxpoints
         k_list=[random()*maxpoints for i in range(maxpoints)]
         k_list=list(set(k_list))
-        rmin,rmax=-100,100
+        rmin,rmax=self.rmin,self.rmax
         b=randint(rmin,rmax)
         #k_list[i]*P + b
         initial_point=Point(randint(rmin,rmax),randint(rmin,rmax))
@@ -67,7 +67,7 @@ class TestCases:
 
     def generate_normal(self,maxpoints):
         #No repeating points and points don't form a line
-        rmin,rmax=-10000,10000
+        rmin,rmax=self.rmin,self.rmax
         points=set((randint(rmin,rmax),randint(rmin,rmax)) for i in range(maxpoints))
         return [Point(x[0],x[1]) for x in points]
 
@@ -92,19 +92,19 @@ class TestCases:
             actual=Polygon([shapely.geometry.Point(p.x,p.y) for p in actual])
         except:
             return None,False
-        buffer=10 # error = 100/20000 ~= 0.02
+        buffer=self.buffer
         res=all([actual.buffer(buffer).contains(shapely.geometry.Point(p.x,p.y)) for p in points])
         return actual,res
 
 
 if __name__ == '__main__':
     for i in range(10):
-        print(i+1)
+        print("Test %d"%(i+1))
         t=TestCases()
         t1=t.generate_linear(10)
         t2=t.generate_normal(100)
-        t3=t.generate_linear_with_repeating_points(5)
-        t4=t.generate_with_repeating_points(10)
+        t3=t.generate_linear_with_repeating_points(20)
+        t4=t.generate_with_repeating_points(5)
         print("linear",t.test_giftwrap_algorithm_correctness(t1))
         print("normal",t.test_giftwrap_algorithm_correctness(t2))
         print("linear with repeating points",t.test_giftwrap_algorithm_correctness(t3))
