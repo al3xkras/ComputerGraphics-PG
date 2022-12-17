@@ -6,6 +6,7 @@ from hex_map import HexMap,Hex
 from pynput import keyboard
 from shapely.geometry import Polygon
 from test.im_to_poly import FrameIterator,ImagePolygon
+from time import sleep
 
 class CountDownLatch(object):
     def __init__(self, count=1):
@@ -56,8 +57,10 @@ class ProjectHexMap:
         exit()
 
     def _setup_hotkeys(self):
-        def on_press(key):
 
+        def on_press(key):
+            if self.hexmap.is_preparing():
+                return
             if hasattr(key, 'vk'):
                 vk=key.vk
                 if vk==81:
@@ -69,18 +72,19 @@ class ProjectHexMap:
 
                 if vk == 107:
                     self.hexmap.zoom_in(0.1)
+                    sleep(0.1)
                 elif vk == 109:
                     self.hexmap.zoom_out(0.1)
+                    sleep(0.1)
+                elif vk==12:
+                    self.hexmap.reset_pos()
+                    sleep(0.1)
 
+            move_delta=50
             if hasattr(key, 'name'):
-                if key.name == "left":
-                    pass
-                elif key.name == "right":
-                    pass
-                elif key.name == "up":
-                    pass
-                elif key.name == "down":
-                    pass
+                if key.name in ["left","right","up","down"]:
+                    self.hexmap.move(key.name[0],move_delta)
+                    sleep(0.1)
                 elif key.name == "q" or key.name == "Q":
                     pass
 

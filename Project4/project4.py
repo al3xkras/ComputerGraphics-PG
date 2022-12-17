@@ -2,6 +2,7 @@ from geometry_lib.data_representation import Side,Segment,WhichSide,Color
 from collections import deque
 from geometry_lib.io_operations import parse_file,TestOutputWriter
 
+
 def _find_convex_hull_giftwrap(point_lst, sort=True):
     if sort:
         point_lst=sorted(point_lst, key=lambda p: p.x)

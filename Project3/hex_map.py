@@ -7,6 +7,7 @@ import pickle
 import os
 import threading
 
+
 class Cache:
     cache_dir="./cache"
     postfix=".bin"
@@ -57,6 +58,7 @@ class Hex:
         #self.neighbours=neighbours
         self.hex_width=Hex.hex_width
         self.offset=[0,0]
+        self.screen_offset=[0,0]
         self.hide=False
 
     def __str__(self) -> str:
@@ -78,7 +80,7 @@ class Hex:
         if self.hide:
             return
         color="white"
-        self.offset=[surface.get_width()//2,surface.get_height()//2]
+        self.offset=[surface.get_width()//2+self.screen_offset[0],surface.get_height()//2+self.screen_offset[1]]
         hex_coords=self.getHexCoords()
         center=self.getCenterCoordsInPx()
         center=[int(x) for x in center]
@@ -200,6 +202,7 @@ class HexMap:
         self.map_size=map_size
         self.zoom_factor=1.0
         self.hex_dict=dict()
+        self.offset=[0,0]
         if map_poly is None:
             x1,y1,x2,y2=(
                 -self.map_size[0]//2,
@@ -263,11 +266,34 @@ class HexMap:
         self.hex_dict.clear()
 
     def zoom_in(self,delta):
+        if self.is_preparing():
+            return
         self.zoom_factor=max(0.05,self.zoom_factor+delta)
         self.clear()
 
     def zoom_out(self,delta):
         self.zoom_in(-delta)
+
+    def move(self,direction,delta):
+        if self.is_preparing():
+            return
+        offset={
+            'l':[-delta,0],
+            'r':[delta,0],
+            'u':[0,-delta],
+            'd':[0,delta]
+        }
+        d=offset[direction]
+        self.offset[0]+=d[0]
+        self.offset[1]+=d[1]
+        self.clear()
+
+    def reset_pos(self):
+        if self.is_preparing():
+            return
+        self.offset=[0,0]
+        self.zoom_factor=1.0
+        self.clear()
 
     def _fillMapRectangleWithHexes(self):
         if len(self.hex_dict)>0:
@@ -279,6 +305,7 @@ class HexMap:
         first_coords=Hex.getHexCoordsByCenterCoords((p.x,p.y))
         first_hex=Hex(hex_type="desert",coordinates=first_coords)
         first_hex.scale=self.zoom_factor
+        first_hex.screen_offset=self.offset
         self._appendHex(first_hex)
         horizon=deque([first_hex])
         horizon_next=deque()
@@ -293,6 +320,7 @@ class HexMap:
                     if not _created:
                         continue
                     neighbour.scale=self.zoom_factor
+                    neighbour.screen_offset=self.offset
                     horizon_next.append(neighbour)
                     hex_count+=1
                     if hex_count_mock>0 and hex_count>hex_count_mock:
