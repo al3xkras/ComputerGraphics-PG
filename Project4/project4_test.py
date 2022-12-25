@@ -4,7 +4,7 @@ from collections import deque
 from random import randint,random
 from shapely.geometry import Polygon
 import shapely
-from project4 import find_convex_hull_giftwrap
+from project4 import find_convex_hull_giftwrap,find_convex_hull_naive
 
 class TestCases:
     def __init__(self):
@@ -55,13 +55,14 @@ class TestCases:
         _points += _rep
         return _points
 
-    def test_giftwrap_algorithm_correctness(self, points, writer:TestOutputWriter, section="test", info=""):
+    def test_algorithm_correctness(self, points, writer:TestOutputWriter, section="test", info="",method=find_convex_hull_giftwrap):
         #If algo is correct:
         #The convex hull contains all points
         #Convex hull of a convex polygon is equal to the polygon
 
-        _actual=list(find_convex_hull_giftwrap(points))
-        _actual1=list(find_convex_hull_giftwrap(_actual))
+        _actual=list(method(points))
+        _actual1=list(method(_actual))
+        section+=str(method)
         try:
             actual=Polygon([shapely.geometry.Point(p.x,p.y) for p in _actual])
             actual1=Polygon([shapely.geometry.Point(p.x,p.y) for p in _actual1])
@@ -97,6 +98,10 @@ class TestCases:
         except: pass
         return actual,res
 
+    def test_giftwrap_algorithm_correctness(self, points, writer: TestOutputWriter, section="test", info=""):
+        self.test_algorithm_correctness(points, writer, section, info,method=find_convex_hull_giftwrap)
+    def test_naive_algorithm_correctness(self, points, writer:TestOutputWriter, section="test", info=""):
+        self.test_algorithm_correctness(points, writer, section, info,method=find_convex_hull_naive)
 
 if __name__ == '__main__':
     writer=TestOutputWriter()

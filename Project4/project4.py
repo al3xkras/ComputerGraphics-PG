@@ -20,7 +20,7 @@ def find_convex_hull_naive(point_lst):
             if len(sides)==1 or (len(sides)==2 and Side.NONE in sides):
                 chull.add(p1)
                 chull.add(p2)
-    return list(chull)
+    return sorted(list(chull))
 
 #0: Collinear points
 #1: Clockwise angle
@@ -60,6 +60,8 @@ def main():
     t = TestCases()
     writer = TestOutputWriter()
     t.test_giftwrap_algorithm_correctness(points, writer, section=section, info="User Input")
+    t.test_naive_algorithm_correctness(points, writer, section=section, info="User Input")
+
     writer.print_to_file(fname + "_convexhull.txt")
 
 def sub():
@@ -75,5 +77,4 @@ def sub():
     print(ch)
 if __name__ == '__main__':
     main()
-    sub()
 
