@@ -38,12 +38,14 @@ class TestOutputWriter:
     segment_expr=delim.join(["%.3f","%.3f","%.3f","%.3f","%s"]) #x1 y1 x2 y2 color
     intersection_point_expr=delim.join(["%.3f","%.3f","%.3f","%.3f","%s","%.3f","%.3f","%.3f","%.3f","%s","%.3f","%.3f"])
     seg_point_side_expr=delim.join(["%.3f","%.3f","%.3f","%.3f","%.3f","%.3f","%d"]) #x1 y1 x2 y2 x3 y3
+    float_expr="%.3f"
     val_type_formats={
         Point:point_expr,
         Segment:segment_expr,
         Intersection_Point:intersection_point_expr,
         Seg_Point_Side:seg_point_side_expr,
-        str:title_expr
+        str:title_expr,
+        float:float_expr
     }
     val_to_params={
         Point: lambda p:(p.x,p.y,p.color),
@@ -54,7 +56,8 @@ class TestOutputWriter:
         Seg_Point_Side: lambda sps: (sps.segment.A.x,sps.segment.A.y,sps.segment.B.x,sps.segment.B.y,
                                      sps.point.x,sps.point.y,
                                      sps.side),
-        str: lambda s: TestOutputWriter.title_expr%s
+        str: lambda s: TestOutputWriter.title_expr%s,
+        float: lambda f: f
     }
 
     def __init__(self):

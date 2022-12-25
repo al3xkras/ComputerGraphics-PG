@@ -6,6 +6,7 @@ from geometry_lib.io_operations import parse_file,TestOutputWriter
 from shapely.geometry import Polygon,Point
 
 def find_convex_hull_naive(point_lst):
+    print("[WARN] naive convex hull algorithm complicity is O(n^3)")
     chull=set()
     for p1 in point_lst:
         for p2 in point_lst:

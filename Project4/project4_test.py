@@ -1,6 +1,6 @@
 from geometry_lib.io_operations import parse_file,TestOutputWriter
 from geometry_lib.data_representation import Point,Side,Segment,WhichSide,Color
-from collections import deque
+from time import time
 from random import randint,random
 from shapely.geometry import Polygon
 import shapely
@@ -55,13 +55,29 @@ class TestCases:
         _points += _rep
         return _points
 
-    def test_algorithm_correctness(self, points, writer:TestOutputWriter, section="test", info="",method=find_convex_hull_giftwrap):
+    @staticmethod
+    def log_exec_time(writer:TestOutputWriter,fun,section,*args,**kwargs):
+        delta=time()
+        res=fun(*args,**kwargs)
+        delta=time()-delta
+        exec_time_postfix=" execution time"
+        section+=exec_time_postfix
+        writer.add_section(section)
+        writer.add_section_value(section,delta)
+        return res
+
+    def test_algorithm_correctness(self, points, writer:TestOutputWriter, section="test", info="",method=find_convex_hull_giftwrap,
+                                   log_exec_time=True):
         #If algo is correct:
         #The convex hull contains all points
         #Convex hull of a convex polygon is equal to the polygon
+        if log_exec_time:
+            log=TestCases.log_exec_time
+        else:
+            log=lambda _,fun,__,args: fun(*args)
 
-        _actual=list(method(points))
-        _actual1=list(method(_actual))
+        _actual=list(log(writer,method,str(method),points))
+        _actual1=list(log(writer,method,str(method),_actual))
         section+=str(method)
         try:
             actual=Polygon([shapely.geometry.Point(p.x,p.y) for p in _actual])
