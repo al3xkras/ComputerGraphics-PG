@@ -7,6 +7,10 @@ More details.
 from geometry_lib.data_representation import *
 import re
 
+class Title:
+    def __init__(self,val:str):
+        self.val=val
+
 class FilePrintStream:
     line_end='\n'
     def __init__(self,filename):
@@ -31,7 +35,8 @@ class TestOutputWriter:
     title='title'
     info='info'
     section_end= ''
-    info_expr='[info]\n#%s'
+    info_expr='#%s'
+    str_expr= '%s'
     title_expr='[%s]'
     delim=chr(9)
     point_expr=delim.join(["%.3f","%.3f","%s"]) #x y color
@@ -44,8 +49,9 @@ class TestOutputWriter:
         Segment:segment_expr,
         Intersection_Point:intersection_point_expr,
         Seg_Point_Side:seg_point_side_expr,
-        str:title_expr,
-        float:float_expr
+        str:str_expr,
+        float:float_expr,
+        Title:title_expr
     }
     val_to_params={
         Point: lambda p:(p.x,p.y,p.color),
@@ -56,8 +62,9 @@ class TestOutputWriter:
         Seg_Point_Side: lambda sps: (sps.segment.A.x,sps.segment.A.y,sps.segment.B.x,sps.segment.B.y,
                                      sps.point.x,sps.point.y,
                                      sps.side),
-        str: lambda s: TestOutputWriter.title_expr%s,
-        float: lambda f: f
+        str: lambda s: TestOutputWriter.str_expr % s,
+        float: lambda f: f,
+        Title: lambda tl: tl.val
     }
 
     def __init__(self):
@@ -85,12 +92,12 @@ class TestOutputWriter:
         if section_name in self.sections:
             return
         self.sections[section_name]={
-            self.title:section_name,
+            self.title:Title(section_name),
             self.values:[]
         }
 
     def set_section_title(self,section,title):
-        self.sections[section][self.title]=title
+        self.sections[section][self.title]=Title(title)
 
     def add_section_value(self,section,value):
         self.sections[section][self.values].append(value)
@@ -104,7 +111,6 @@ class TestOutputWriter:
     def set_section_info(self, section, info):
         self.sections[section][self.info]=info
 
-
     def set_header(self,header):
         self.header=header
 
@@ -115,7 +121,8 @@ class TestOutputWriter:
             print_stream.write_line(self.section_end)
         for s in self.sections:
             s_val=self.sections[s]
-            print_stream.write_line(self.title_expr%s_val[self.title])
+            title=s_val[self.title]
+            print_stream.write_line(self.title_expr % self.val_to_params[type(title)](title))
             for val in s_val[self.values]:
                 vtype=type(val)
                 print_stream.write_line(

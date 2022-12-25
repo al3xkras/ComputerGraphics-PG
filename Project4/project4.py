@@ -1,8 +1,11 @@
 from geometry_lib.data_representation import Side,Segment,WhichSide,Color
 from geometry_lib.io_operations import parse_file,TestOutputWriter
 from shapely.geometry import Polygon,Point
+from geometry_lib.data_representation import Point as Point1
 from gui import DisplayConvexHullResults
-
+from random import random,randint
+from time import time
+import shapely
 def find_convex_hull_naive(point_lst):
     print("[WARN] naive convex hull algorithm complicity is O(n^3)")
     chull=set()
@@ -47,17 +50,142 @@ def find_convex_hull_giftwrap(points):
     result.append(points[current_point])
   return result
 
+class TestCases:
+    def __init__(self):
+        self.rmin,self.rmax=-10000,10000
+        self.buffer=1 # error = 1/20000 ~= 0.00005
+
+    def generate_linear(self,maxpoints):
+        #All points form a line
+        k_list=[random()*maxpoints for i in range(maxpoints)]
+        k_list=list(set(k_list))
+        rmin,rmax=self.rmin,self.rmax
+        b=randint(rmin,rmax)
+        #k_list[i]*P + b
+        initial_point=Point1(randint(rmin,rmax),randint(rmin,rmax))
+        _points=[Point1(initial_point.x*k_list[i]+b,
+                      initial_point.y*k_list[i]+b) for i in range(len(k_list))]
+        return _points
+
+
+    def generate_linear_with_repeating_points(self,maxpoints,reps=None):
+        #All points form a line and some points repeat
+        _points=self.generate_linear(maxpoints)
+        if reps is None:
+            reps=len(_points)//10+1
+        assert reps>0
+        _rep=[]
+        for _ in range(reps):
+            _rep.append(_points[randint(0,len(_points)-1)])
+        _points+=_rep
+        return _points
+
+    def generate_normal(self,maxpoints):
+        #No repeating points and points don't form a line
+        rmin,rmax=self.rmin,self.rmax
+        points=set((randint(rmin,rmax),randint(rmin,rmax)) for i in range(maxpoints))
+        return [Point1(x[0],x[1]) for x in points]
+
+
+    def generate_with_repeating_points(self,maxpoints,reps=None):
+        #The test contains are at least 2 points with the same coordinates
+        _points = self.generate_normal(maxpoints)
+        if reps is None:
+            reps = len(_points) // 10 + 1
+        assert reps > 0
+        _rep = []
+        for _ in range(reps):
+            _rep.append(_points[randint(0, len(_points) - 1)])
+        _points += _rep
+        return _points
+
+    @staticmethod
+    def log_exec_time(writer:TestOutputWriter,fun,section,*args,**kwargs):
+        delta=time()
+        res=fun(*args,**kwargs)
+        delta=time()-delta
+        exec_time_postfix=" execution time"
+        section+=exec_time_postfix
+        writer.add_section(section)
+        writer.add_section_value(section,delta)
+        return res
+
+    def test_algorithm_correctness(self, points, writer:TestOutputWriter, section="test", info="",method=find_convex_hull_giftwrap,
+                                   log_exec_time=True):
+        #If algo is correct:
+        #The convex hull contains all points
+        #Convex hull of a convex polygon is equal to the polygon
+        if log_exec_time:
+            log=TestCases.log_exec_time
+        else:
+            log=lambda _,fun,__,args: fun(*args)
+
+        _actual=list(log(writer,method,str(method),points))
+        _actual1=list(log(writer,method,str(method),_actual))
+        section+=str(method)
+        try:
+            actual=Polygon([shapely.geometry.Point(p.x,p.y) for p in _actual])
+            actual1=Polygon([shapely.geometry.Point(p.x,p.y) for p in _actual1])
+        except:
+            return None,False
+        print("actual",actual)
+        print("convex hull of 'actual'",actual1)
+        print("'actual' = convex hull of 'actual':",actual==actual1)
+        buffer=self.buffer
+        s_name_input=section+" input data"
+        s_name_actual = section + " convex hull"
+        s_name_actual1 = section + " convex hull of the output convex hull"
+
+        writer.add_section(section)
+        writer.set_section_info(section,info)
+        writer.add_section(s_name_input)
+        for p in points:
+            writer.add_section_value(s_name_input,p)
+        writer.set_section_info(s_name_input,"Input points")
+        writer.add_section(s_name_actual)
+        writer.add_section(s_name_actual1)
+        for i in range(len(_actual)):
+            val=_actual[i]
+            writer.add_section_value(s_name_actual,val)
+        for i in range(len(_actual1)):
+            val1=_actual1[i]
+            writer.add_section_value(s_name_actual1,val1)
+            writer.set_section_info(s_name_actual1,"must be equal to '%s' for non-linear cases"%s_name_actual)
+
+        res=False
+        try:
+            res=all([actual.buffer(buffer).contains(shapely.geometry.Point(p.x,p.y)) for p in points])
+        except: pass
+        return actual,res
+
+    def test_giftwrap_algorithm_correctness(self, points, writer: TestOutputWriter, section="test", info=""):
+        self.test_algorithm_correctness(points, writer, section, info,method=find_convex_hull_giftwrap)
+    def test_naive_algorithm_correctness(self, points, writer:TestOutputWriter, section="test", info=""):
+        self.test_algorithm_correctness(points, writer, section, info,method=find_convex_hull_naive)
+
+
 def main():
-    print(parse_file("./test_out.txt"))
+    def_fname="./test_out.txt"
+    def_section="points"
     fname = input("Input filename: ").strip()
+    fname = fname if fname else def_fname
     data = parse_file(fname)
     section = input("Please input section to process: ").strip()
+    section=section if section else def_section
     print(data)
     points = data[section]
     ch = find_convex_hull_giftwrap(points)
-    from project4_test import TestCases
+    ch1 = find_convex_hull_naive(points)
     t = TestCases()
     writer = TestOutputWriter()
+
+    dta = "data"
+    writer.add_section(dta)
+
+    writer.add_section_value(dta, "points count: %d" % len(points))
+    writer.add_section_value(dta, "naive algorithm: convex hull points count: %d" % len(ch1))
+    writer.add_section_value(dta, "giftwrap algorithm: convex hull points count: %d" % len(ch))
+
     t.test_giftwrap_algorithm_correctness(points, writer, section=section, info="User Input")
     t.test_naive_algorithm_correctness(points, writer, section=section, info="User Input")
 
@@ -76,8 +204,10 @@ def sub():
     print(ch)
 
 def sub_gui():
-    data = parse_file("./test_out.txt")
-    points = data['points']
+    #data = parse_file("./test_out.txt")
+    #points = data['points']
+    t=TestCases()
+    points=t.generate_normal(25)
     ch = find_convex_hull_giftwrap(points)
     DisplayConvexHullResults.scale=1/50
     r = DisplayConvexHullResults(points,ch)
@@ -85,5 +215,5 @@ def sub_gui():
     r.scale=1/1000
     r.mainloop()
 if __name__ == '__main__':
-    sub_gui()
+    main()
 
