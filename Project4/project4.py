@@ -1,9 +1,7 @@
-import operator
-
 from geometry_lib.data_representation import Side,Segment,WhichSide,Color
-from collections import deque
 from geometry_lib.io_operations import parse_file,TestOutputWriter
 from shapely.geometry import Polygon,Point
+from gui import DisplayConvexHullResults
 
 def find_convex_hull_naive(point_lst):
     print("[WARN] naive convex hull algorithm complicity is O(n^3)")
@@ -76,6 +74,16 @@ def sub():
         print(x)
     ch = Polygon([Point(s.x, s.y) for s in points]).convex_hull
     print(ch)
+
+def sub_gui():
+    data = parse_file("./test_out.txt")
+    points = data['points']
+    ch = find_convex_hull_giftwrap(points)
+    DisplayConvexHullResults.scale=1/50
+    r = DisplayConvexHullResults(points,ch)
+
+    r.scale=1/1000
+    r.mainloop()
 if __name__ == '__main__':
-    main()
+    sub_gui()
 

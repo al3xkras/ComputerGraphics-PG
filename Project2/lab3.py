@@ -145,8 +145,8 @@ class Lab3:
             screen = self.screen
             screen.fill((0x00, 0x00, 0x00))
 
-            self.background.draw(screen)
-            self.spaceship_info.draw(screen)
+            self.background.draw_self(screen)
+            self.spaceship_info.draw_self(screen)
 
             self.distance_traveled += self.warp * 2
             self.distance_traveled_spaceship1 += self.warp * 2
@@ -155,8 +155,8 @@ class Lab3:
             self.spacecraft.speed_up(self.distance_traveled_spaceship1 - self.distance_traveled)
             self.contestant_spacecraft.speed_up(self.distance_traveled_spaceship2 - self.distance_traveled)
 
-            self.spacecraft.draw(screen)
-            self.contestant_spacecraft.draw(screen)
+            self.spacecraft.draw_self(screen)
+            self.contestant_spacecraft.draw_self(screen)
             pygame.display.flip()
 
         self.latch.count_down()
