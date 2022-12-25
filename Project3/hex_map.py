@@ -41,9 +41,9 @@ class Hex:
         "lu": "rd", "rd": "lu",
         "ld": "ru", "ru": "ld"
     }
-    hex_width=18 #px
+    hex_width=8 #px
     scale=1
-    color=(0xcc, 0xcc, 0xcc)
+    color=(0xff, 0xff, 0xff)
     def __init__(self, hex_type, coordinates):
         #if neighbours is None:
             #neighbours = dict()
@@ -79,7 +79,7 @@ class Hex:
     def draw(self,surface:pygame.Surface):
         if self.hide:
             return
-        color="white"
+        color="black"
         self.offset=[surface.get_width()//2+self.screen_offset[0],surface.get_height()//2+self.screen_offset[1]]
         hex_coords=self.getHexCoords()
         center=self.getCenterCoordsInPx()
@@ -303,13 +303,13 @@ class HexMap:
         else:
             p=Point(0,0)
         first_coords=Hex.getHexCoordsByCenterCoords((p.x,p.y))
-        first_hex=Hex(hex_type="desert",coordinates=first_coords)
+        first_hex=Hex(hex_type="plains",coordinates=first_coords)
         first_hex.scale=self.zoom_factor
         first_hex.screen_offset=self.offset
         self._appendHex(first_hex)
         horizon=deque([first_hex])
         horizon_next=deque()
-        hex_count_mock=3000
+        hex_count_mock=6000
         hex_count=0
         while len(horizon)>0:
             for _hex in horizon:
@@ -324,7 +324,7 @@ class HexMap:
                     horizon_next.append(neighbour)
                     hex_count+=1
                     if hex_count_mock>0 and hex_count>hex_count_mock:
-                        print("hex map overflow: ",hex_count)
+                        #print("hex map overflow: ",hex_count)
                         return
             horizon=horizon_next
             horizon_next=deque()

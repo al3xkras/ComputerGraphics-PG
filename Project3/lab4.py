@@ -107,12 +107,12 @@ class ProjectHexMap:
         def draw_map():
             nonlocal im
             while self.draw:
-                fps.tick(30)
+                fps.tick(5)
                 if not lock.locked():
                     im = fr.__next__()
 
         t=threading.Thread(target=draw_map,daemon=True)
-        #t.start()
+        t.start()
 
         while self.draw:
             clock.tick(60)

@@ -34,6 +34,13 @@ class Point:
     def __str__(self) -> str:
         return "Point["+str(self.x)+" "+str(self.y)+"]"
 
+    def __gt__(self, other):
+        if self.x==other.x:
+            return self.y>other.y
+        return self.x>other.x
+    def __lt__(self, other):
+        return not self>other
+
 #enum Side
 class Side:
     LEFT = -1
