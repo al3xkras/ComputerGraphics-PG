@@ -121,7 +121,7 @@ class TestCases:
             log=lambda _,fun,__,args: fun(*args)
 
         _actual=list(log(writer,method,str(method),points))
-        _actual1=list(log(writer,method,str(method),_actual))
+        _actual1=list(method(_actual))
         section+=str(method)
         try:
             actual=Polygon([shapely.geometry.Point(p.x,p.y) for p in _actual])
@@ -165,7 +165,7 @@ class TestCases:
 
 
 def main():
-    def_fname="./test_out.txt"
+    def_fname="./test_data/test5.txt"
     def_section="points"
     fname = input("Input filename: ").strip()
     fname = fname if fname else def_fname
@@ -192,7 +192,7 @@ def main():
     writer.print_to_file(fname + "_convexhull.txt")
 
 def sub():
-    data = parse_file("./test_out.txt")
+    data = parse_file("./test_data/test1.txt")
     points = data['points']
     for x in find_convex_hull_naive(points):
       print(x)
@@ -207,7 +207,8 @@ def sub_gui():
     #data = parse_file("./test_out.txt")
     #points = data['points']
     t=TestCases()
-    points=t.generate_normal(25)
+    #points=t.generate_normal(25)
+    points=parse_file("./test_data/test5.txt")['points']
     ch = find_convex_hull_giftwrap(points)
     DisplayConvexHullResults.scale=1/50
     r = DisplayConvexHullResults(points,ch)
@@ -215,5 +216,9 @@ def sub_gui():
     r.scale=1/1000
     r.mainloop()
 if __name__ == '__main__':
-    main()
+    action=input("Choose action (test/gui): ").strip().lower()
+    if action=="test":
+        main()
+    elif action=="gui":
+        sub_gui()
 
