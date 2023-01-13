@@ -3,7 +3,6 @@ import shutil
 from random import randint
 from geometry_lib.data_representation import *
 from geometry_lib.io_operations import parse_file,TestOutputWriter
-import yaml
 
 class Tests:
     test_dir="./test_data/"

@@ -4,6 +4,7 @@ Documentation for this module.
 
 More details.
 """
+import numpy as np
 
 """Documentation for this class.
 
@@ -51,6 +52,12 @@ class Point:
         return self.x>other.x
     def __lt__(self, other):
         return not self>other
+
+    def is_definite(self):
+        d={
+            None,np.inf,-np.inf
+        }
+        return self.x not in d and self.y not in d
 
 #enum Side
 class Side:

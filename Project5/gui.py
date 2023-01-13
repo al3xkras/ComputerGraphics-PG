@@ -6,9 +6,10 @@ import os
 from geometry_lib.data_representation import *
 from pynput import keyboard
 from threading import Lock,Thread
+from Project5 import flat_map
 pygame.font.init()
 
-flat_map = lambda f, it: [y for ys in it for y in f(ys)]
+
 
 class DisplaySegmentIntersections:
     WINDOW_SIZE = (900, 600)
@@ -36,7 +37,6 @@ class DisplaySegmentIntersections:
         self.text_surf = self.font.render(self.msg,False,"white")
 
     def init_bbox(self,segments):
-        global flat_map
         points=flat_map(lambda seg: (seg.A,seg.B),segments)
 
         self.bbox = DisplaySegmentIntersections.bounding_box(points)
@@ -135,12 +135,12 @@ class DisplaySegmentIntersections:
 
 if __name__ == '__main__':
     from tests import Tests
+    from Project5 import flat_map
     segs=Tests.generate_segments({
-        Color.RED:5,
-        Color.GREEN:15,
-        Color.PURPLE:10,
-        Color.BLUE:2
+        Color.RED:23,
+        Color.BLUE:15
     })
+
     segs=flat_map(lambda a:a,segs)
 
     print(segs)

@@ -3,7 +3,7 @@ from geometry_lib.data_representation import Side,Segment,WhichSide,Color
 from geometry_lib.io_operations import parse_file,TestOutputWriter
 from shapely.geometry import Polygon,Point
 from geometry_lib.data_representation import Point as Point1
-from gui import DisplayConvexHullResults
+from Project4.gui import DisplayConvexHullResults
 from random import random,randint
 from time import time
 import shapely
