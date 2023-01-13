@@ -1,6 +1,4 @@
-
 from scipy.stats import norm
-
 from geometry_lib.data_representation import Side,Segment,WhichSide,Color
 from geometry_lib.io_operations import parse_file,TestOutputWriter
 from shapely.geometry import Polygon,Point
@@ -9,6 +7,7 @@ from gui import DisplayConvexHullResults
 from random import random,randint
 from time import time
 import shapely
+
 def find_convex_hull_naive(point_lst):
     print("[WARN] naive convex hull algorithm complicity is O(n^3)")
     chull=set()
@@ -70,7 +69,6 @@ class TestCases:
                       initial_point.y*k_list[i]+b) for i in range(len(k_list))]
         return _points
 
-
     def generate_linear_with_repeating_points(self,maxpoints,reps=None):
         #All points form a line and some points repeat
         _points=self.generate_linear(maxpoints)
@@ -82,9 +80,11 @@ class TestCases:
             _rep.append(_points[randint(0,len(_points)-1)])
         _points+=_rep
         return _points
+
     @staticmethod
     def _rand(a,b):
         return norm.rvs(loc=b-a,scale=b)
+
     def generate_normal(self,maxpoints, dist=None):
         if dist is None:
             dist=(TestCases._rand,TestCases._rand)

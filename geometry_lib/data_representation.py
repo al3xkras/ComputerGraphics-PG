@@ -16,6 +16,16 @@ class Color:
     RED = 2
     GREEN = 3
     PURPLE = 4
+    pygame_colors={
+        NONE:"white",
+        BLUE:"blue",
+        RED:"red",
+        GREEN:"green",
+        PURPLE:"purple"
+    }
+    @staticmethod
+    def to_pygame(c):
+        return Color.pygame_colors[c]
 
 class Point:
     def __init__(self, x, y, color=Color.NONE):
@@ -53,7 +63,7 @@ class Side:
 More details.
 """
 class Segment:
-    def __init__(self, A:Point, B:Point, color:Color):
+    def __init__(self, A:Point, B:Point, color=Color.NONE):
         self.A = A
         self.B = B
         self.color = color
