@@ -67,7 +67,9 @@ if __name__ == '__main__':
     gen = lambda: flat_map(lambda _:_,Tests.generate_segments({
         Color.RED: 15,
         Color.BLUE: 5,
-        Color.GREEN: 7
+        Color.GREEN: 7,
+        Color.YELLOW: 4,
+        Color.generic_from_tuple((10, 50, 28)): 17
     }))
     method=lambda segments: bentley_ottman(segments)
     segs=gen()

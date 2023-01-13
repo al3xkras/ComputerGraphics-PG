@@ -12,10 +12,14 @@ More details.
 """
 
 
-def sum_mod256(t1,t2):
-    m=256
+def sum_mean(t1, t2):
     assert len(t1)==len(t2)
-    return tuple((t1[i]+t2[i])%m for i in range(len(t1)))
+    return tuple(int(t1[i]/2+t2[i]/2) for i in range(len(t1)))
+
+def brightness_up(color, percent=0.6):
+    max_add=255-max(color)
+    to_add=int(max_add*percent)
+    return tuple(color[i]+to_add for i in range(len(color)))
 
 class Color:
     NONE = 0
@@ -24,6 +28,7 @@ class Color:
     GREEN = 3
     PURPLE = 4
     YELLOW=5
+    _gen_id=6
     pygame_colors={
         NONE:(255,255,255),
         BLUE:(0,0,255),
@@ -32,6 +37,11 @@ class Color:
         PURPLE:(255,0,255),
         YELLOW:(255,255,0)
     }
+    @staticmethod
+    def generic_from_tuple(color_tuple):
+        Color.pygame_colors[Color._gen_id]=color_tuple
+        return Color._gen_id
+
     @staticmethod
     def to_pygame(c):
         if not isinstance(c,int):
@@ -43,7 +53,7 @@ class Color:
             return c1
         _c1=Color.to_pygame(c1)
         _c2=Color.to_pygame(c2)
-        return sum_mod256(_c1,_c2)
+        return brightness_up(sum_mean(_c1, _c2))
 
 
 class Point:
