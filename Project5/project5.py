@@ -60,19 +60,54 @@ def bentley_ottman(segments,step=None):
     _bentley_ottman(segments,intersections,step,seg_y_range,sort_y)
     return intersections
 
+def main():
+    pass
+
+def read_test_segments(test_num=0):
+    return Tests.read_test_data(test_num)["segments"]
+
 if __name__ == '__main__':
     from tests import Tests
     from Project5 import flat_map
     from Project5.gui import DisplaySegmentIntersections
-    gen = lambda: flat_map(lambda _:_,Tests.generate_segments({
-        Color.RED: 15,
-        Color.BLUE: 5,
-        Color.GREEN: 7,
-        Color.YELLOW: 4,
-        Color.generic_from_tuple((10, 50, 28)): 17
-    }))
+    inp=False
+    if inp:
+        generate=input("generate data and write to file? (y/n): ").lower()[:1]
+        generate=len(generate)!=0 and generate[0]=='y'
+        test_num=input("test number: ")
+        test_num=None if len(test_num)==0 else int(test_num)
+    else:
+        generate=False
+        test_num=None
+    data_def={
+        Color.RED: 73,
+        Color.BLUE: 44
+    }
+    data_def1={
+        Color.RED: 13,
+        Color.BLUE: 20,
+        Color.generic_from_tuple((0,255,0)): 12,
+        Color.generic_from_tuple((255,255,0)):3,
+        Color.generic_from_tuple((18,58,77)):7
+    }
+    #data_def=data_def1
+    from scipy.stats import norm,expon,uniform
+    #X coordinate - exponentially distributed
+    d_uni = lambda a,b: uniform.rvs(loc=0,scale=10000)
+    d_exp = lambda a, b: expon.rvs(loc=b - a, scale=b)
+    #Y coordinate: normally distributed
+    d_norm = lambda a, b: norm.rvs(loc=b - a, scale=b)
+    dist=(d_uni, d_uni)
+
+    gen = lambda: flat_map(lambda _:_, Tests.generate_segments(data_def, dist=dist))
     method=lambda segments: bentley_ottman(segments)
-    segs=gen()
+
+    if generate:
+        Tests.write_test_data(data_def,test_num=test_num)
+    if test_num is not None:
+        segs=read_test_segments(test_num)
+    else:
+        segs=gen()
     pts=bentley_ottman(segs)
     gui=DisplaySegmentIntersections(segs, pts, method=method, generator=gen)
     gui.mainloop()

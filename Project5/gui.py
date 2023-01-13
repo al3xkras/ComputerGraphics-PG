@@ -135,7 +135,6 @@ class DisplaySegmentIntersections:
 
 if __name__ == '__main__':
     from tests import Tests
-    from Project5 import flat_map
     segs=Tests.generate_segments({
         Color.RED:23,
         Color.BLUE:15
