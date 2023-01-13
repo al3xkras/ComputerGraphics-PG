@@ -23,6 +23,8 @@ def seg_intersection_naive(iterable, collector):
             p = Intersection(seg1, seg2)
             if not p.is_definite():
                 continue
+            c=Color.combine(seg1.color,seg2.color)
+            p.color=c
             collector.add(p)
 
 
@@ -62,13 +64,13 @@ if __name__ == '__main__':
     from tests import Tests
     from Project5 import flat_map
     from Project5.gui import DisplaySegmentIntersections
-    gen = lambda: Tests.generate_segments({
-        Color.RED: 5,
-        Color.BLUE: 5
-    })
+    gen = lambda: flat_map(lambda _:_,Tests.generate_segments({
+        Color.RED: 15,
+        Color.BLUE: 5,
+        Color.GREEN: 7
+    }))
     method=lambda segments: bentley_ottman(segments)
     segs=gen()
-    segs=flat_map(lambda a:a,segs)
     pts=bentley_ottman(segs)
     gui=DisplaySegmentIntersections(segs, pts, method=method, generator=gen)
     gui.mainloop()

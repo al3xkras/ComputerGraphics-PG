@@ -79,7 +79,7 @@ class DisplaySegmentIntersections:
             self.draw_point(surface,p,color=Color.to_pygame(p.color))
 
     def draw_point(self,surface:pygame.Surface,point,color="green"):
-        radius=3
+        radius=5
         scale=self.scale
         offset=self.obj_offset
         pygame.draw.circle(surface,color,(scale*(point.x+offset[0]),scale*(point.y+offset[1])),radius)

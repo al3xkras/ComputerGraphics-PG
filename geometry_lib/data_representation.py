@@ -11,22 +11,40 @@ import numpy as np
 More details.
 """
 
+
+def sum_mod256(t1,t2):
+    m=256
+    assert len(t1)==len(t2)
+    return tuple((t1[i]+t2[i])%m for i in range(len(t1)))
+
 class Color:
     NONE = 0
     BLUE = 1
     RED = 2
     GREEN = 3
     PURPLE = 4
+    YELLOW=5
     pygame_colors={
-        NONE:"white",
-        BLUE:"blue",
-        RED:"red",
-        GREEN:"green",
-        PURPLE:"purple"
+        NONE:(255,255,255),
+        BLUE:(0,0,255),
+        RED:(255,0,0),
+        GREEN:(0,255,0),
+        PURPLE:(255,0,255),
+        YELLOW:(255,255,0)
     }
     @staticmethod
     def to_pygame(c):
+        if not isinstance(c,int):
+            return c
         return Color.pygame_colors[c]
+    @staticmethod
+    def combine(c1,c2):
+        if c1==c2:
+            return c1
+        _c1=Color.to_pygame(c1)
+        _c2=Color.to_pygame(c2)
+        return sum_mod256(_c1,_c2)
+
 
 class Point:
     def __init__(self, x, y, color=Color.NONE):
