@@ -25,23 +25,33 @@ class Color:
     NONE = 0
     BLUE = 1
     RED = 2
-    GREEN = 3
-    PURPLE = 4
-    YELLOW=5
+    def_colors={
+        0:NONE,1:BLUE,2:RED
+    }
+    @staticmethod
+    def parse_color(obj):
+        if isinstance(obj, str) and obj.isnumeric():
+            obj=int(obj)
+        if obj in Color.def_colors:
+            return Color.def_colors[obj]
+        if isinstance(obj,str) and not obj.isnumeric():
+            obj=tuple(int(x) for x in obj[1:-1].split())
+            return Color.generic_from_tuple(obj)
+        if isinstance(obj,tuple):
+            return Color.generic_from_tuple(obj)
     _gen_id=6
     pygame_colors={
         NONE:(255,255,255),
         BLUE:(0,0,255),
-        RED:(255,0,0),
-        GREEN:(0,255,0),
-        PURPLE:(255,0,255),
-        YELLOW:(255,255,0)
+        RED:(255,0,0)
     }
     @staticmethod
     def generic_from_tuple(color_tuple):
         Color.pygame_colors[Color._gen_id]=color_tuple
-        return Color._gen_id
-
+        Color.def_colors[Color._gen_id]=color_tuple
+        g=Color._gen_id
+        Color._gen_id+=1
+        return g
     @staticmethod
     def to_pygame(c):
         if not isinstance(c,int):

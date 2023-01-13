@@ -266,17 +266,8 @@ def parse_file(dir_path):
             if match_comment or line == "\n":
                 pass
             else:
-                color = section_name[-1]
-                if color == "0":
-                    color = Color.NONE
-                elif color == "1":
-                    color = Color.BLUE
-                elif color == "2":
-                    color = Color.RED
-                elif color == "3":
-                    color = Color.GREEN
-                else:  # If color not given or not needed
-                    color = Color.NONE
+                color = line.rstrip()[-1]
+                color=Color.parse_color(color)
                 if flag == 1:
                     section_content.append(pointFromLine(line, color))
                 elif flag == 2:

@@ -3,6 +3,7 @@ import shutil
 from random import randint
 from geometry_lib.data_representation import *
 from geometry_lib.io_operations import parse_file,TestOutputWriter
+from Project4.project4 import TestCases
 
 class Tests:
     test_dir="./test_data/"
@@ -13,22 +14,20 @@ class Tests:
     load_factor=0.75
     
     @staticmethod
-    def random_points(count=1,color=Color.RED):
-        xb,yb=Tests.x_bound,Tests.y_bound
-        if count > Tests.load_factor*(xb[1]-xb[0])*(yb[1]-yb[0]):
-            raise Exception("count of unique points is greater than bound")
-        pts=set()
-        while len(pts)<count:
-            pts.add(Point(randint(*xb),randint(*yb),color=color))
+    def random_points(count=1,color=Color.RED,dist=None):
+        t=TestCases()
+        pts=t.generate_normal(maxpoints=count,dist=dist)
+        for p in pts:
+            p.color=color
         return pts
 
     @staticmethod
-    def generate_points(kw:dict):
+    def generate_points(kw:dict,dist=None):
         rmp=Tests.random_points
         points=[]
         for color in kw:
             count=kw[color]
-            points.append(rmp(count,color))
+            points.append(rmp(count,color,dist))
         return points
 
     @staticmethod
@@ -49,11 +48,11 @@ class Tests:
                 return segments
 
     @staticmethod
-    def generate_segments(kw:dict):
+    def generate_segments(kw:dict,dist=None):
         #each segment contains 2 points
         kw=dict((k,kw[k]*2) for k in kw)
         #segment points: red, blue
-        pts=Tests.generate_points(kw)
+        pts=Tests.generate_points(kw,dist)
         sg=Tests.points_to_random_segments
         return [sg(x) for x in pts]
 
