@@ -15,6 +15,7 @@ class Color:
     BLUE = 1
     RED = 2
     GREEN = 3
+    PURPLE = 4
 
 class Point:
     def __init__(self, x, y, color=Color.NONE):

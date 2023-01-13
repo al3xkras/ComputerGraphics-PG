@@ -1,3 +1,6 @@
+
+from scipy.stats import norm
+
 from geometry_lib.data_representation import Side,Segment,WhichSide,Color
 from geometry_lib.io_operations import parse_file,TestOutputWriter
 from shapely.geometry import Polygon,Point
@@ -79,11 +82,15 @@ class TestCases:
             _rep.append(_points[randint(0,len(_points)-1)])
         _points+=_rep
         return _points
-
-    def generate_normal(self,maxpoints):
+    @staticmethod
+    def _rand(a,b):
+        return norm.rvs(loc=b-a,scale=b)
+    def generate_normal(self,maxpoints, dist=None):
+        if dist is None:
+            dist=TestCases._rand
         #No repeating points and points don't form a line
         rmin,rmax=self.rmin,self.rmax
-        points=set((randint(rmin,rmax),randint(rmin,rmax)) for i in range(maxpoints))
+        points=set((dist(rmin,rmax),dist(rmin,rmax)) for i in range(maxpoints))
         return [Point1(x[0],x[1]) for x in points]
 
 
@@ -207,18 +214,24 @@ def sub_gui():
     #data = parse_file("./test_out.txt")
     #points = data['points']
     t=TestCases()
-    #points=t.generate_normal(25)
-    points=parse_file("./test_data/test5.txt")['points']
+    points=t.generate_normal(5000)
+    #points=parse_file("./test_data/test5.txt")['points']
     ch = find_convex_hull_giftwrap(points)
     DisplayConvexHullResults.scale=1/50
-    r = DisplayConvexHullResults(points,ch)
-
-    r.scale=1/1000
+    gen=lambda: t.generate_normal(1000)
+    r = DisplayConvexHullResults(points,ch,method=find_convex_hull_giftwrap,generator=gen)
     r.mainloop()
 if __name__ == '__main__':
-    action=input("Choose action (test/gui): ").strip().lower()
+    action="gui" #input("Choose action (test/gui): ").strip().lower()
     if action=="test":
         main()
     elif action=="gui":
         sub_gui()
+    else:
+        t=TestCases()
+        points=t.generate_normal(200000)
+        tm=time()
+        find_convex_hull_giftwrap(points)
+        delta=time()-tm
+        print(delta)
 

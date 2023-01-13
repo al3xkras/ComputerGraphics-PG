@@ -8,7 +8,7 @@ if __name__ == '__main__':
         print(section)
         t=TestCases()
         t1=t.generate_linear(10)
-        t2=t.generate_normal(20)
+        t2=t.generate_normal(100)
         t3=t.generate_linear_with_repeating_points(20)
         #t4=t.generate_with_repeating_points(74)
         info=["linear","normal","linear with repeating points","repeating points"]
