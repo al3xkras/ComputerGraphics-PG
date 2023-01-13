@@ -91,6 +91,12 @@ class Point:
     def __lt__(self, other):
         return not self>other
 
+    def __eq__(self, other):
+        return round(self.x,3)==round(other.x,3) and round(self.x,3)==round(other.x,3)
+
+    def __hash__(self):
+        return hash((round(self.x,3),round(self.y,3)))
+
     def is_definite(self):
         d={
             None,np.inf,-np.inf,np.nan
@@ -145,6 +151,7 @@ class Intersection_Point:
         self.segment1 = seg1 
         self.segment2 = seg2
         self.intersection_point = point #function from elementary_functions.py
+        self.point=self.intersection_point
     def get_inter_point(self):
         return self.intersection_point
 

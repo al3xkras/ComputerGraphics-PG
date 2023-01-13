@@ -41,7 +41,7 @@ class TestOutputWriter:
     delim=chr(9)
     point_expr=delim.join(["%.3f","%.3f","%s"]) #x y color
     segment_expr=delim.join(["%.3f","%.3f","%.3f","%.3f","%s"]) #x1 y1 x2 y2 color
-    intersection_point_expr=delim.join(["%.3f","%.3f","%.3f","%.3f","%s","%.3f","%.3f","%.3f","%.3f","%s","%.3f","%.3f"])
+    intersection_point_expr=delim.join(["%.3f","%.3f","%.3f","%.3f","%s","%.3f","%.3f","%.3f","%.3f","%s","%.3f","%.3f","%s"])
     seg_point_side_expr=delim.join(["%.3f","%.3f","%.3f","%.3f","%.3f","%.3f","%d"]) #x1 y1 x2 y2 x3 y3
     float_expr="%.3f"
     val_type_formats={
@@ -58,7 +58,7 @@ class TestOutputWriter:
         Segment: lambda s:(s.A.x,s.A.y,s.B.x,s.B.y,s.color),
         Intersection_Point: lambda ip: (ip.segment1.A.x,ip.segment1.A.y,ip.segment1.B.x,ip.segment1.B.y,ip.segment1.color,
                                         ip.segment2.A.x,ip.segment2.A.y,ip.segment2.B.x,ip.segment2.B.y,ip.segment2.color,
-                                        ip.intersection_point.x,ip.intersection_point.y),
+                                        ip.intersection_point.x,ip.intersection_point.y,ip.intersection_point.color),
         Seg_Point_Side: lambda sps: (sps.segment.A.x,sps.segment.A.y,sps.segment.B.x,sps.segment.B.y,
                                      sps.point.x,sps.point.y,
                                      sps.side),

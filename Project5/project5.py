@@ -1,3 +1,5 @@
+import threading
+import time
 from collections import deque
 from geometry_lib.data_representation import *
 from tests import Tests
@@ -26,9 +28,9 @@ def seg_intersection_naive(iterable, collector, intersection_point_collector=Non
                 continue
             c=Color.combine(seg1.color,seg2.color)
             p.color=c
-            collector.add(p)
-            if ipc is not None:
+            if ipc is not None and not p in collector:
                 ipc.add(Intersection_Point(seg1,seg2,p))
+            collector.add(p)
 
 def _bentley_ottman(segments,collector,step=None,seg_range=None,sort=None,intersection_point_collector=None):
     #O(n*log(n))
@@ -83,20 +85,18 @@ def main():
         Color.BLUE: 44
     }
     data_def1 = {
-        Color.RED: 13,
-        Color.BLUE: 20,
-        Color.generic_from_tuple((0, 255, 0)): 12,
-        Color.generic_from_tuple((255, 255, 0)): 3,
-        Color.generic_from_tuple((18, 58, 77)): 7
+        Color.RED: 50,
+        Color.BLUE: 50,
+        Color.generic_from_tuple((0, 255, 0)): 50,
     }
-    # data_def=data_def1
+    data_def=data_def1
     from scipy.stats import norm, expon, uniform
     # X coordinate - exponentially distributed
     d_uni = lambda a, b: uniform.rvs(loc=0, scale=10000)
     d_exp = lambda a, b: expon.rvs(loc=b - a, scale=b)
     # Y coordinate: normally distributed
     d_norm = lambda a, b: norm.rvs(loc=b - a, scale=b)
-    dist = (d_uni, d_uni)
+    dist = (d_norm, d_exp)
 
     gen = lambda: flat_map(lambda _: _, Tests.generate_segments(data_def, dist=dist))
     IntersectionPts = type('IntersectionPts', (object,), {
@@ -116,12 +116,12 @@ def main():
         segs = gen()
     pts = method(segs)
     if write_test_res:
-        assert test_num is not None
+        if test_num is None:
+            test_num=-1
         intersection_points=intersection_points.data
-        Tests.write_test_results(intersection_points,test_num)
-    #gui = DisplaySegmentIntersections(segs, pts, method=method, generator=gen)
-
-    #gui.mainloop()
+        Tests.write_test_results(segs,intersection_points,test_num)
+    gui = DisplaySegmentIntersections(segs, pts, method=method, generator=gen)
+    gui.mainloop()
 
 def read_test_segments(test_num=0):
     return Tests.read_test_data(test_num)["segments"]

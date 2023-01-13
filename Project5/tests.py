@@ -3,6 +3,7 @@ import shutil
 from geometry_lib.data_representation import *
 from geometry_lib.io_operations import parse_file,TestOutputWriter
 from Project4.project4 import TestCases
+import webcolors
 
 class Tests:
     test_dir="./test_data/"
@@ -15,7 +16,23 @@ class Tests:
     @staticmethod
     def file_name_from_test_num(num):
         return Tests.test_dir+Tests.test_fname_prefix+str(num)+Tests.test_file_ext
-    
+
+    @staticmethod
+    def closest_colour(requested_colour):
+        min_colours = {}
+        for key, name in webcolors.CSS3_HEX_TO_NAMES.items():
+            r_c, g_c, b_c = webcolors.hex_to_rgb(key)
+            rd = (r_c - requested_colour[0]) ** 2
+            gd = (g_c - requested_colour[1]) ** 2
+            bd = (b_c - requested_colour[2]) ** 2
+            min_colours[(rd + gd + bd)] = name
+        return min_colours[min(min_colours.keys())]
+    @staticmethod
+    def colour_name(rgb):
+        try:
+            return webcolors.rgb_to_name(rgb)
+        except:
+            return Tests.closest_colour(rgb)
     @staticmethod
     def random_points(count=1,color=Color.RED,dist=None):
         t=TestCases()
@@ -81,7 +98,7 @@ class Tests:
         os.mkdir(Tests.test_dir)
 
     @staticmethod
-    def write_test_results(intersection_pts,test_num):
+    def write_test_results(segments,intersection_pts,test_num):
         postf="_intersections.txt"
         fname=Tests.file_name_from_test_num(test_num)+postf
         t=TestOutputWriter()
@@ -89,6 +106,35 @@ class Tests:
         t.add_section(sec)
         for x in intersection_pts:
             t.add_section_value(sec,x)
+
+        points_by_color=dict()
+        segments_by_color=dict()
+        for x in intersection_pts:
+            p=x.point
+            if p.color in points_by_color:
+                points_by_color[p.color]+=1
+            else:
+                points_by_color[p.color]=1
+        for x in segments:
+            if x.color in segments_by_color:
+                segments_by_color[x.color]+=1
+            else:
+                segments_by_color[x.color]=1
+        info="info"
+        t.add_section(info)
+        t.add_section_value(info,"segments count by color: ")
+        format="%s: %d"
+        for c in segments_by_color:
+            color_name=Tests.colour_name(Color.to_pygame(c))
+            val=format%(color_name,segments_by_color[c])
+            t.add_section_value(info,val)
+
+        t.add_section_value(info,"\nintersection points count by color: ")
+        for c in points_by_color:
+            color_name = Tests.colour_name(Color.to_pygame(c))
+            val = format%(color_name, points_by_color[c])
+            t.add_section_value(info, val)
+
         t.print_to_file(fname)
 
 
