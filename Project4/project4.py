@@ -223,6 +223,7 @@ def sub_gui():
     gen=lambda: t.generate_normal(1000,dist=(d1,d2))
     r = DisplayConvexHullResults(points,ch,method=find_convex_hull_giftwrap,generator=gen)
     r.mainloop()
+
 if __name__ == '__main__':
     action="gui" #input("Choose action (test/gui): ").strip().lower()
     if action=="test":

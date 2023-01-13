@@ -26,8 +26,6 @@ class CountDownLatch(object):
             self.lock.wait()
         self.lock.release()
 
-
-
 class ProjectHexMap:
     WINDOW_SIZE = (900, 600)
     WINDOW_POSITION = (500, 30)
@@ -87,8 +85,6 @@ class ProjectHexMap:
                     sleep(0.1)
                 elif key.name == "q" or key.name == "Q":
                     pass
-
-
 
         with keyboard.Listener(on_press=on_press) as l:
             l.join()

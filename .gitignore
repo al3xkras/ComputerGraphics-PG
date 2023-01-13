@@ -1,5 +1,6 @@
 test.mp4
 /tmp
+*_out.txt
 **/__pycache__
 **/**_convexhull.txt
 HELP.md
