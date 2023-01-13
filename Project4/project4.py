@@ -87,10 +87,10 @@ class TestCases:
         return norm.rvs(loc=b-a,scale=b)
     def generate_normal(self,maxpoints, dist=None):
         if dist is None:
-            dist=TestCases._rand
+            dist=(TestCases._rand,TestCases._rand)
         #No repeating points and points don't form a line
         rmin,rmax=self.rmin,self.rmax
-        points=set((dist(rmin,rmax),dist(rmin,rmax)) for i in range(maxpoints))
+        points=set((dist[0](rmin,rmax),dist[1](rmin,rmax)) for i in range(maxpoints))
         return [Point1(x[0],x[1]) for x in points]
 
 
@@ -211,14 +211,16 @@ def sub():
     print(ch)
 
 def sub_gui():
+    from scipy.stats import expon,norm
     #data = parse_file("./test_out.txt")
     #points = data['points']
     t=TestCases()
     points=t.generate_normal(5000)
     #points=parse_file("./test_data/test5.txt")['points']
     ch = find_convex_hull_giftwrap(points)
-    DisplayConvexHullResults.scale=1/50
-    gen=lambda: t.generate_normal(1000)
+    d1=lambda a,b: expon.rvs(loc=b-a,scale=b)
+    d2=lambda a,b: norm.rvs(loc=b-a,scale=b)
+    gen=lambda: t.generate_normal(1000,dist=(d1,d2))
     r = DisplayConvexHullResults(points,ch,method=find_convex_hull_giftwrap,generator=gen)
     r.mainloop()
 if __name__ == '__main__':
@@ -229,7 +231,7 @@ if __name__ == '__main__':
         sub_gui()
     else:
         t=TestCases()
-        points=t.generate_normal(200000)
+        points=t.generate_normal(100000)
         tm=time()
         find_convex_hull_giftwrap(points)
         delta=time()-tm
