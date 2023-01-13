@@ -1,6 +1,5 @@
 import os
 import shutil
-from random import randint
 from geometry_lib.data_representation import *
 from geometry_lib.io_operations import parse_file,TestOutputWriter
 from Project4.project4 import TestCases
@@ -12,6 +11,10 @@ class Tests:
     x_bound=[-1000,1000]
     y_bound=[-1000,1000]
     load_factor=0.75
+
+    @staticmethod
+    def file_name_from_test_num(num):
+        return Tests.test_dir+Tests.test_fname_prefix+str(num)+Tests.test_file_ext
     
     @staticmethod
     def random_points(count=1,color=Color.RED,dist=None):
@@ -64,18 +67,30 @@ class Tests:
         for seg_lst in Tests.generate_segments(kw):
             for seg in seg_lst:
                 tw.add_section_value(section_name,seg)
-        fname=Tests.test_dir+Tests.test_fname_prefix+str(test_num)+Tests.test_file_ext
+        fname=Tests.file_name_from_test_num(test_num)
         tw.print_to_file(fname)
 
     @staticmethod
     def read_test_data(test_num=0):
-        fname=Tests.test_dir+Tests.test_fname_prefix+str(test_num)+Tests.test_file_ext
+        fname=Tests.file_name_from_test_num(test_num)
         return parse_file(fname)
 
     @staticmethod
     def clear_tests():
         shutil.rmtree(Tests.test_dir)
         os.mkdir(Tests.test_dir)
+
+    @staticmethod
+    def write_test_results(intersection_pts,test_num):
+        postf="_intersections.txt"
+        fname=Tests.file_name_from_test_num(test_num)+postf
+        t=TestOutputWriter()
+        sec="intersections"
+        t.add_section(sec)
+        for x in intersection_pts:
+            t.add_section_value(sec,x)
+        t.print_to_file(fname)
+
 
 if __name__ == '__main__':
     Tests.write_test_data({

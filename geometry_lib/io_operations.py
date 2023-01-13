@@ -57,7 +57,7 @@ class TestOutputWriter:
         Point: lambda p:(p.x,p.y,p.color),
         Segment: lambda s:(s.A.x,s.A.y,s.B.x,s.B.y,s.color),
         Intersection_Point: lambda ip: (ip.segment1.A.x,ip.segment1.A.y,ip.segment1.B.x,ip.segment1.B.y,ip.segment1.color,
-                                        ip.segment1.A.x,ip.segment1.A.y,ip.segment1.B.x,ip.segment1.B.y,ip.segment1.color,
+                                        ip.segment2.A.x,ip.segment2.A.y,ip.segment2.B.x,ip.segment2.B.y,ip.segment2.color,
                                         ip.intersection_point.x,ip.intersection_point.y),
         Seg_Point_Side: lambda sps: (sps.segment.A.x,sps.segment.A.y,sps.segment.B.x,sps.segment.B.y,
                                      sps.point.x,sps.point.y,

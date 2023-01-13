@@ -1,6 +1,7 @@
 test.mp4
 /tmp
 *_out.txt
+*_intersections.txt
 **/__pycache__
 **/**_convexhull.txt
 HELP.md

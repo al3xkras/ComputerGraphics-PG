@@ -93,7 +93,7 @@ class Point:
 
     def is_definite(self):
         d={
-            None,np.inf,-np.inf
+            None,np.inf,-np.inf,np.nan
         }
         return self.x not in d and self.y not in d
 
