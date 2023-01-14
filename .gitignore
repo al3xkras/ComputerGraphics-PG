@@ -3,6 +3,7 @@ test.mp4
 *_out.txt
 *_intersections.txt
 **/__pycache__
+**/.ipynb_checkpoints
 **/**_convexhull.txt
 HELP.md
 target/

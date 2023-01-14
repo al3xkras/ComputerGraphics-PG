@@ -225,7 +225,7 @@ def sub_gui():
     r.mainloop()
 
 if __name__ == '__main__':
-    action="gui" #input("Choose action (test/gui): ").strip().lower()
+    action=input("Choose action (test/gui): ").strip().lower()
     if action=="test":
         main()
     elif action=="gui":
