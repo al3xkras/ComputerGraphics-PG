@@ -1,5 +1,3 @@
-import threading
-import time
 from collections import deque
 from geometry_lib.data_representation import *
 from tests import Tests
