@@ -236,7 +236,7 @@ class HexMap:
                 for i in range(a,b):
                     x=lst[i]
                     x.isContainedInPolygon(self.map_poly)
-                    x.draw_self(self._cached_surface)
+                    x.draw(self._cached_surface)
             thr_count=1
             _k=len(lst)//thr_count
             _a=0
