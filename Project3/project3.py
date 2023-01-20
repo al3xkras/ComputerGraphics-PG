@@ -66,23 +66,22 @@ class ProjectHexMap:
                     self.latch.await_countdown()
                     exit()
 
-                print(vk)
-
+                zf=0.2
                 if vk == 107:
-                    self.hexmap.zoom_in(0.1)
-                    sleep(0.1)
+                    self.hexmap.zoom_in(zf)
+                    #sleep(0.1)
                 elif vk == 109:
-                    self.hexmap.zoom_out(0.1)
-                    sleep(0.1)
+                    self.hexmap.zoom_out(zf)
+                    #sleep(0.1)
                 elif vk==12:
                     self.hexmap.reset_pos()
-                    sleep(0.1)
+                    #sleep(0.1)
 
-            move_delta=50
+            move_delta=100
             if hasattr(key, 'name'):
                 if key.name in ["left","right","up","down"]:
                     self.hexmap.move(key.name[0],move_delta)
-                    sleep(0.1)
+                    #sleep(0.1)
                 elif key.name == "q" or key.name == "Q":
                     pass
 
@@ -90,8 +89,9 @@ class ProjectHexMap:
             l.join()
 
     def mainloop(self):
+        import cv2
         self.setup()
-        fr=FrameIterator("../test/test.mp4")
+        #fr=FrameIterator("../test/test.mp4")
         s=self.WINDOW_SIZE
         offset=[50,50,50,50]
         o=offset
@@ -99,14 +99,15 @@ class ProjectHexMap:
                    (-s[0]/2+o[0], s[1]/2-o[1]),
                    (s[0]/2-o[1], s[1]/2-o[2]),
                    (s[0]/2-o[1], -s[1]/2+o[2])])
-        self.hexmap=HexMap(ProjectHexMap.WINDOW_SIZE,map_poly=p)
+        img=cv2.imread("./graphics/map.png")
+        self.hexmap=HexMap(ProjectHexMap.WINDOW_SIZE,map_poly=p, image=img)
         Hex.hex_width=s[0]/48
         hm = self.hexmap
         rect=hm.map_poly
         clock = pygame.time.Clock()
-        fps=pygame.time.Clock()
+        #fps=pygame.time.Clock()
 
-        im=None
+        """im=None
         lock=threading.Lock()
         def draw_map():
             nonlocal im
@@ -117,7 +118,7 @@ class ProjectHexMap:
 
         t=threading.Thread(target=draw_map,daemon=True)
         t.start()
-
+        """
         while self.draw:
             clock.tick(60)
             for event in pygame.event.get():
