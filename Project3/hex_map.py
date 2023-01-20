@@ -1,3 +1,4 @@
+import random
 from collections import deque
 
 import pygame
@@ -15,6 +16,7 @@ class ImagePolygon:
         #_x,_y=_y,_x
         w=len(image)
         h=len(image[0])
+        self.w,self.h=w,h
         self.offset=-_x[0],-_y[0]
         rect_w=abs(_x[0]-_x[2])
         rect_h=abs(_y[0]-_y[2])
@@ -72,10 +74,10 @@ class Hex:
     _cache_surfaces=None
     _lock=threading.Lock()
     hex_types = {
-        "sea": "sea.png",
-        "plains": "plains.png",
-        "mountains": "mountains.png",
-        "desert": "desert.png"
+        "sea": ["sea0.png","sea1.png","sea2.png"],
+        "plains": ["plains0.png","plains1.png","plains2.png"],
+        "mountains": ["mountains0.png","mountains1.png"],
+        "desert": ["desert0.png","desert1.png"]
     }
 
     def __init__(self, hex_type, coordinates):
@@ -105,15 +107,19 @@ class Hex:
                 Hex.load_cache_surfaces()
             Hex._lock.release()
         #print(Hex._cache_surfaces)
-        return Hex._cache_surfaces[hex_type].copy()
+        amount=len(Hex.hex_types[hex_type])
+        return Hex._cache_surfaces[hex_type+str(random.randint(0,amount-1))].copy()
 
     @staticmethod
     def load_cache_surfaces():
         prefix="./graphics/hex/"
         Hex._cache_surfaces=dict()
         for hex_type in Hex.hex_types:
-            fname=Hex.hex_types[hex_type]
-            Hex._cache_surfaces[hex_type]=pygame.image.load(prefix + fname)
+            f_names=Hex.hex_types[hex_type]
+            i=0
+            for fname in f_names:
+                Hex._cache_surfaces[hex_type+str(i)]=pygame.image.load(prefix + fname)
+                i+=1
 
     @staticmethod
     def draw_arrow(surface,_from,_to,color):
@@ -130,10 +136,10 @@ class Hex:
     def type_from_color(r,g,b):
         if g>r and g>b:
             return "plains"
-        if r/2+g/2>g/2+b/2 and r/2+g/2>r/2+b/2:
-            return "desert"
-        if b>r and b>g:
+        if r>b:
             return "sea"
+        if b>r and b>g:
+            return "desert"
         return "mountains"
 
     @staticmethod
@@ -154,13 +160,6 @@ class Hex:
     def draw(self,surface:pygame.Surface):
         if self.hide:
             return
-        color={
-            "plains":"green",
-            "desert":"yellow",
-            "sea":"blue",
-            "mountains":"gray",
-            None:"gray"
-        }[self.hex_type]
 
         self.offset=[surface.get_width()//2+self.screen_offset[0],surface.get_height()//2+self.screen_offset[1]]
         hex_coords=self.getHexCoords()
@@ -237,7 +236,7 @@ class Hex:
             self.hide=poly.can_draw_hex_at(Point(self.getCenterCoordsInPx()))
         return poly.contains(Point(self.getCenterCoordsInPx()))
 
-    def createNeighbour(self, hexmap, location:str, hex_type, rect, replace_if_exists=False):
+    def createNeighbour(self, hexmap, location:str, hex_type, rect):
         #if location in self.neighbours and not replace_if_exists:
         #    return self.neighbours[location], False
         coords = [x for x in self.coordinates]
