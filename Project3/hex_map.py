@@ -41,7 +41,7 @@ class Hex:
         "lu": "rd", "rd": "lu",
         "ld": "ru", "ru": "ld"
     }
-    hex_width=8 #px
+    hex_width=19.5 #px
     scale=1
     color=(0xff, 0xff, 0xff)
     def __init__(self, hex_type, coordinates):
@@ -105,15 +105,13 @@ class Hex:
             c[1] += self.offset[1]
             #Hex.draw_arrow(surface,center,c,"green")"""
 
-    def getCenterCoordsInPx(self, scale=False):
+    def getCenterCoordsInPx(self):
         w=self.hex_width*self.scale*2
         i,j,k=(x*w for x in self.coordinates)
 
         c = (i * sqrt(3) + j * sqrt(3) / 4 + k * sqrt(3) / 4,
                              j * 3 / 4 - k * 3 / 4)
-        if not scale:
-            return c
-        return int(c[0]),int(c[1])
+        return c
 
     @staticmethod
     def getHexCoordsByCenterCoords(center,width=None,scale=1):
@@ -197,10 +195,13 @@ class HexMap:
         "desert": "desert.png"
     }
     cache_surface_name="hexmap_hexes"
+    min_zoom=0.5
+    max_zoom=5
     def __init__(self, map_size, map_poly=None):
         self._hex_list = None
         self.map_size=map_size
         self.zoom_factor=1.0
+        self._hex_w=Hex.hex_width
         self.hex_dict=dict()
         self.offset=[0,0]
         if map_poly is None:
@@ -259,16 +260,19 @@ class HexMap:
     def _nextRandomHexType(self):
         return "plains"
 
-    def clear(self):
+    def clear(self,clear_hexes=True):
         if self.is_preparing():
             return
         self._cached_surface=None
-        self.hex_dict.clear()
+        if clear_hexes:
+            self.hex_dict.clear()
 
     def zoom_in(self,delta):
         if self.is_preparing():
             return
-        self.zoom_factor=max(0.05,self.zoom_factor+delta)
+        self.zoom_factor=min(self.max_zoom,max(self.min_zoom,self.zoom_factor+delta))
+        print(self.zoom_factor)
+        Hex.hex_width=self._hex_w*self.zoom_factor
         self.clear()
 
     def zoom_out(self,delta):
@@ -297,19 +301,21 @@ class HexMap:
 
     def _fillMapRectangleWithHexes(self):
         if len(self.hex_dict)>0:
+            print("not empty")
             return
+        print(self.map_poly)
         if hasattr(self.map_poly,"centroid"):
             p=self.map_poly.centroid
         else:
             p=Point(0,0)
         first_coords=Hex.getHexCoordsByCenterCoords((p.x,p.y))
         first_hex=Hex(hex_type="plains",coordinates=first_coords)
-        first_hex.scale=self.zoom_factor
+        #first_hex.scale=self.zoom_factor
         first_hex.screen_offset=self.offset
         self._appendHex(first_hex)
         horizon=deque([first_hex])
         horizon_next=deque()
-        hex_count_mock=6000
+        hex_count_mock=0
         hex_count=0
         while len(horizon)>0:
             for _hex in horizon:
@@ -319,7 +325,7 @@ class HexMap:
                     neighbour,_created=_hex.createNeighbour(self, direction, self._nextRandomHexType(), self.map_poly)
                     if not _created:
                         continue
-                    neighbour.scale=self.zoom_factor
+                    #neighbour.scale=self.zoom_factor
                     neighbour.screen_offset=self.offset
                     horizon_next.append(neighbour)
                     hex_count+=1

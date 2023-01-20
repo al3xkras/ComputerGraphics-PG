@@ -83,9 +83,9 @@ def main():
         Color.BLUE: 44
     }
     data_def1 = {
-        Color.RED: 50,
-        Color.BLUE: 50,
-        Color.generic_from_tuple((0, 255, 0)): 50,
+        Color.RED: 5,
+        Color.BLUE: 5,
+        Color.generic_from_tuple((0, 255, 0)): 5,
     }
     data_def=data_def1
     from scipy.stats import norm, expon, uniform

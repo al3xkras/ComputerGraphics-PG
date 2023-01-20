@@ -92,7 +92,15 @@ class ProjectHexMap:
     def mainloop(self):
         self.setup()
         fr=FrameIterator("../test/test.mp4")
-        self.hexmap=HexMap(ProjectHexMap.WINDOW_SIZE)
+        s=self.WINDOW_SIZE
+        offset=[50,50,50,50]
+        o=offset
+        p=Polygon([(-s[0]/2+o[0], -s[1]/2+o[1]),
+                   (-s[0]/2+o[0], s[1]/2-o[1]),
+                   (s[0]/2-o[1], s[1]/2-o[2]),
+                   (s[0]/2-o[1], -s[1]/2+o[2])])
+        self.hexmap=HexMap(ProjectHexMap.WINDOW_SIZE,map_poly=p)
+        Hex.hex_width=s[0]/48
         hm = self.hexmap
         rect=hm.map_poly
         clock = pygame.time.Clock()
@@ -119,18 +127,18 @@ class ProjectHexMap:
             hm.draw(self.screen)
             pygame.display.flip()
 
-            lock.acquire()
-            image=im
-            lock.release()
+            #lock.acquire()
+            image=None #im
+            #lock.release()
 
-            if im is None:
+            if image is None:
                 continue
 
             if not hm.is_preparing():
                 try:
                     map_poly = ImagePolygon(image, 10, rect)
                 except StopIteration:
-                    map_poly = Polygon([(-100, 400), (400, -100), (300, 400), (400, 300)])
+                    map_poly = p
 
                 hm.map_poly = map_poly
                 hm.clear()
