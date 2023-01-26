@@ -87,16 +87,9 @@ class Hex:
     }
 
     def __init__(self, hex_type, coordinates):
-        # if neighbours is None:
-        # neighbours = dict()
-
-        self.coordinates = (0,
-                            coordinates[1] + coordinates[0],
-                            coordinates[2] + coordinates[0]
-                            )
+        self.coordinates = (0,coordinates[1] + coordinates[0],coordinates[2] + coordinates[0])
         self.hex_type = hex_type
         self.scale = Hex.scale
-        # self.neighbours=neighbours
         self.hex_width = Hex.hex_width
         self.offset = [0, 0]
         self.screen_offset = [0, 0]
@@ -112,7 +105,6 @@ class Hex:
             if Hex._cache_surfaces is None:
                 Hex.load_cache_surfaces()
             Hex._lock.release()
-        # print(Hex._cache_surfaces)
         amount = len(Hex.hex_types[hex_type])
         return Hex._cache_surfaces[hex_type + str(random.randint(0, amount - 1))].copy()
 
@@ -235,14 +227,11 @@ class Hex:
         return poly.contains(Point(self.getCenterCoordsInPx()))
 
     def createNeighbour(self, hexmap, location: str, hex_type, rect):
-        # if location in self.neighbours and not replace_if_exists:
-        #    return self.neighbours[location], False
         coords = [x for x in self.coordinates]
         shift = Hex.neigh_directions[location]
         h = Hex.transform(coords, True)
         h[shift[0]] += shift[1]
         coords = tuple(h)
-        # self_loc_for_neigh=Hex.inverse_direction[location]
         _hex = None
         _created = True
         if coords in hexmap.hex_dict:
@@ -253,8 +242,6 @@ class Hex:
             if not _hex.isContainedInPolygon(rect):
                 return None, False
             hexmap.hex_dict[coords] = _hex
-        # _hex.neighbours[self_loc_for_neigh]=self
-        # self.neighbours[location]=_hex
         return _hex, _created
 
     @staticmethod
@@ -334,6 +321,7 @@ class HexMap:
                     x.draw(self._cached_surface)
 
             t = threading.Thread(target=f, daemon=True)
+            self._op_threads.append(t)
             t.start()
 
     def draw(self, surface):
@@ -358,8 +346,6 @@ class HexMap:
         self.zoom_factor = min(self.max_zoom, max(self.min_zoom, self.zoom_factor + delta))
         for x in self.hex_dict.values():
             x.scale = self.zoom_factor
-        # Hex.hex_width=self._hex_w*self.zoom_factor
-        # self.clear()
 
     def zoom_out(self, delta):
         self.zoom_in(-delta)
@@ -394,11 +380,8 @@ class HexMap:
         self.init_map_poly(self.initial_zoom)
         self.image = ImagePolygon(self.img, self.map_poly)
 
-        # Hex.hex_width=Hex.hex_width*self.max_zoom
         first_coords = Hex.getHexCoordsByCenterCoords((p.x, p.y))
         first_hex = Hex(hex_type=self.image.hex_type_by_point((p.x, p.y)), coordinates=first_coords)
-        # first_hex.scale=self.max_zoom
-        # first_hex.screen_offset=self.offset
         self._appendHex(first_hex)
         horizon = deque([first_hex])
         horizon_next = deque()
@@ -412,13 +395,10 @@ class HexMap:
                     neighbour, _created = _hex.createNeighbour(self, direction, None, self.map_poly)
                     if not _created:
                         continue
-                    # neighbour.scale=self.max_zoom
-                    # neighbour.screen_offset=self.offset
                     neighbour.hex_type = self.image.hex_type_by_point(neighbour.getCenterCoordsInPx())
                     horizon_next.append(neighbour)
                     hex_count += 1
                     if hex_count_mock > 0 and hex_count > hex_count_mock:
-                        # print("hex map overflow: ",hex_count)
                         return
             horizon = horizon_next
             horizon_next = deque()

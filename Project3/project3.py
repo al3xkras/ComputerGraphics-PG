@@ -5,8 +5,7 @@ import threading
 from hex_map import HexMap, Hex
 from pynput import keyboard
 from shapely.geometry import Polygon
-from test.im_to_poly import FrameIterator, ImagePolygon
-from time import sleep
+from test.im_to_poly import ImagePolygon
 
 
 class CountDownLatch(object):
@@ -72,19 +71,15 @@ class ProjectHexMap:
                 zf = 0.2
                 if vk == 107:
                     self.hexmap.zoom_in(zf)
-                    # sleep(0.1)
                 elif vk == 109:
                     self.hexmap.zoom_out(zf)
-                    # sleep(0.1)
                 elif vk == 12:
                     self.hexmap.reset_pos()
-                    # sleep(0.1)
 
             move_delta = 100
             if hasattr(key, 'name'):
                 if key.name in ["left", "right", "up", "down"]:
                     self.hexmap.move(key.name[0], move_delta)
-                    # sleep(0.1)
                 elif key.name == "q" or key.name == "Q":
                     pass
 
@@ -94,7 +89,6 @@ class ProjectHexMap:
     def mainloop(self):
         import cv2
         self.setup()
-        # fr=FrameIterator("../test/test.mp4")
         s = self.WINDOW_SIZE
         offset = [50, 50, 50, 50]
         o = offset
@@ -106,22 +100,8 @@ class ProjectHexMap:
         self.hexmap = HexMap(ProjectHexMap.WINDOW_SIZE, map_poly=p, image=img)
         Hex.hex_width = s[0] / 48
         hm = self.hexmap
-        rect = hm.map_poly
         clock = pygame.time.Clock()
-        # fps=pygame.time.Clock()
 
-        """im=None
-        lock=threading.Lock()
-        def draw_map():
-            nonlocal im
-            while self.draw:
-                fps.tick(5)
-                if not lock.locked():
-                    im = fr.__next__()
-
-        t=threading.Thread(target=draw_map,daemon=True)
-        t.start()
-        """
         while self.draw:
             clock.tick(60)
             for event in pygame.event.get():
@@ -130,22 +110,6 @@ class ProjectHexMap:
             self.screen.fill((0x00, 0x00, 0x00))
             hm.draw(self.screen)
             pygame.display.flip()
-
-            # lock.acquire()
-            image = None  # im
-            # lock.release()
-
-            if image is None:
-                continue
-
-            if not hm.is_preparing():
-                try:
-                    map_poly = ImagePolygon(image, 10, rect)
-                except StopIteration:
-                    map_poly = p
-
-                hm.map_poly = map_poly
-                hm.clear()
         self.latch.count_down()
 
 
