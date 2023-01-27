@@ -5,7 +5,7 @@ import threading
 from hex_map import HexMap, Hex
 from pynput import keyboard
 from shapely.geometry import Polygon
-from test.im_to_poly import ImagePolygon
+
 
 
 class CountDownLatch(object):
@@ -80,8 +80,6 @@ class ProjectHexMap:
             if hasattr(key, 'name'):
                 if key.name in ["left", "right", "up", "down"]:
                     self.hexmap.move(key.name[0], move_delta)
-                elif key.name == "q" or key.name == "Q":
-                    pass
 
         with keyboard.Listener(on_press=on_press) as l:
             l.join()

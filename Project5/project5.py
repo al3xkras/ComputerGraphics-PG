@@ -22,7 +22,7 @@ def seg_intersection_naive(iterable, collector, intersection_point_collector=Non
         s.__next__()
         for seg2 in s:
             p = Intersection(seg1, seg2)
-            if not p.is_definite():
+            if p is None or not p.is_definite():
                 continue
             c=Color.combine(seg1.color,seg2.color)
             p.color=c
@@ -71,6 +71,7 @@ def main():
     if inp:
         generate = input("generate data and write to file? (y/n): ").lower()[:1]
         generate = len(generate) != 0 and generate[0] == 'y'
+        postf=input("Path postfix")
         test_num = input("test number: ")
         test_num = None if len(test_num) == 0 else int(test_num)
         write_test_res = input("write test results to file? (y/n): ").lower()[:1]
@@ -86,6 +87,8 @@ def main():
         Color.RED: 5,
         Color.BLUE: 5,
         Color.generic_from_tuple((0, 255, 0)): 5,
+        Color.generic_from_tuple((12,54,2)):10,
+        Color.generic_from_tuple((4,100,125)):15
     }
     data_def=data_def1
     from scipy.stats import norm, expon, uniform
@@ -94,7 +97,7 @@ def main():
     d_exp = lambda a, b: expon.rvs(loc=b - a, scale=b)
     # Y coordinate: normally distributed
     d_norm = lambda a, b: norm.rvs(loc=b - a, scale=b)
-    dist = (d_norm, d_exp)
+    dist = (d_uni, d_uni)
 
     gen = lambda: flat_map(lambda _: _, Tests.generate_segments(data_def, dist=dist))
     IntersectionPts = type('IntersectionPts', (object,), {
@@ -109,7 +112,7 @@ def main():
     if generate:
         Tests.write_test_data(data_def, test_num=test_num)
     if test_num is not None:
-        segs = read_test_segments(test_num)
+        segs = read_test_segments(test_num,path_postf=postf)
     else:
         segs = gen()
     pts = method(segs)
@@ -121,8 +124,8 @@ def main():
     gui = DisplaySegmentIntersections(segs, pts, method=method, generator=gen)
     gui.mainloop()
 
-def read_test_segments(test_num=0):
-    return Tests.read_test_data(test_num)["segments"]
+def read_test_segments(test_num=0, path_postf=""):
+    return Tests.read_test_data(test_num,path_postf)["segments"]
 
 if __name__ == '__main__':
     main()

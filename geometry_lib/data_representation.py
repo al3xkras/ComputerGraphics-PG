@@ -13,6 +13,8 @@ More details.
 
 
 def sum_mean(t1, t2):
+    if t1 is None or t2 is None:
+        return (255,255,255)
     assert len(t1)==len(t2)
     return tuple(int(t1[i]/2+t2[i]/2) for i in range(len(t1)))
 

@@ -14,8 +14,8 @@ class Tests:
     load_factor=0.75
 
     @staticmethod
-    def file_name_from_test_num(num):
-        return Tests.test_dir+Tests.test_fname_prefix+str(num)+Tests.test_file_ext
+    def file_name_from_test_num(num, path_postf=""):
+        return Tests.test_dir+path_postf+Tests.test_fname_prefix+str(num)+Tests.test_file_ext
 
     @staticmethod
     def closest_colour(requested_colour):
@@ -29,6 +29,8 @@ class Tests:
         return min_colours[min(min_colours.keys())]
     @staticmethod
     def colour_name(rgb):
+        if rgb is None:
+            return "white"
         try:
             return webcolors.rgb_to_name(rgb)
         except:
@@ -88,8 +90,8 @@ class Tests:
         tw.print_to_file(fname)
 
     @staticmethod
-    def read_test_data(test_num=0):
-        fname=Tests.file_name_from_test_num(test_num)
+    def read_test_data(test_num=0, path_postf=""):
+        fname=Tests.file_name_from_test_num(test_num, path_postf)
         return parse_file(fname)
 
     @staticmethod

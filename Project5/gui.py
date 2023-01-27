@@ -137,7 +137,9 @@ if __name__ == '__main__':
     from tests import Tests
     segs=Tests.generate_segments({
         Color.RED:23,
-        Color.BLUE:15
+        Color.BLUE:15,
+        Color.generic_from_tuple((12,54,2)):10,
+        Color.generic_from_tuple((4,100,125)):15
     })
 
     segs=flat_map(lambda a:a,segs)
